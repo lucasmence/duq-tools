@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Duq Sprite Fusion</title>
+  <link rel="icon" type="image/png" href="icon.png" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <!-- Splash Screen -->
+  <div class="splash" id="splash">
+    <div class="splash-content">
+      <img class="splash-icon" src="icon.png" alt="Duq Sprite Fusion" />
+      <h1 class="splash-title">Duq Sprite Fusion</h1>
+      <p class="splash-subtitle">Sprite Fusion Tool</p>
+      <div class="splash-loader">
+        <div class="splash-loader-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <div class="logo">
+          <div class="logo-icon">
+            <img src="icon.png" alt="Duq Sprite Fusion" class="logo-img" />
+          </div>
+          <div class="logo-text">
+            <h1>Duq Sprite Fusion</h1>
+            <span class="subtitle">Sprite Fusion Tool</span>
+          </div>
+        </div>
+        <div class="header-stats" id="headerStats">
+          <span class="stat-badge">
+            <span class="stat-number" id="imageCount">0</span>
+            <span class="stat-label">images</span>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Drop Zone -->
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-zone-content">
+          <div class="drop-zone-icon">
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+              <rect x="8" y="8" width="48" height="48" rx="8" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4" fill="none"/>
+              <path d="M32 20V44M20 32H44" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h2>Drag your PNG images here</h2>
+          <p class="drop-zone-hint">or click to select files</p>
+          <p class="drop-zone-format">Accepted formats: <strong>PNG</strong></p>
+          <input type="file" id="fileInput" accept=".png,image/png" multiple hidden />
+          <button class="btn-select" id="btnSelect">Select Files</button>
+        </div>
+        <div class="drop-zone-overlay" id="dropOverlay">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <path d="M8 24H40M24 8V40" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+          <span>Drop to add</span>
+        </div>
+      </div>
+
+      <!-- Live Preview -->
+      <section class="preview-section" id="previewSection">
+        <div class="section-header">
+          <h2>Live Preview</h2>
+          <span class="preview-dimensions" id="previewDimensions"></span>
+        </div>
+        <div class="preview-container" id="previewContainer">
+          <canvas id="previewCanvas"></canvas>
+          <div class="preview-empty" id="previewEmpty">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+              <rect x="4" y="4" width="24" height="24" rx="4" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+              <path d="M12 16h8M16 12v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
+            </svg>
+            <span>Preview will appear here</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Image List -->
+      <section class="image-list-section" id="imageListSection">
+        <div class="section-header">
+          <h2>Sprite List</h2>
+          <div class="section-actions">
+            <button class="btn-save" id="btnSave">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M13.333 10.667v2A1.333 1.333 0 0112 14H4a1.333 1.333 0 01-1.333-1.333v-2M8 2v8M5.333 7.333L8 10.667l2.667-3.334" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Save Fusion
+            </button>
+            <button class="btn-clear" id="btnClearAll">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M2 4H14M5.333 4V2.667A1.333 1.333 0 016.667 1.333h2.666a1.333 1.333 0 011.334 1.334V4M12.667 4v9.333a1.333 1.333 0 01-1.334 1.334H4.667a1.333 1.333 0 01-1.334-1.334V4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Clear All
+            </button>
+          </div>
+        </div>
+        <div class="image-list" id="imageList">
+          <div class="empty-state" id="emptyState">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <rect x="6" y="6" width="36" height="36" rx="6" stroke="currentColor" stroke-width="2" opacity="0.3"/>
+              <path d="M18 24h12M24 18v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+            </svg>
+            <p>No images added yet</p>
+            <span>Drag PNG files to the area above</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>Duq Sprite Fusion &mdash; Drag, organize and merge your sprites.</p>
+    </footer>
+  </div>
+
+  <!-- Template for image card -->
+  <template id="imageCardTemplate">
+    <div class="image-card" data-id="" draggable="false">
+      <div class="image-card-handle" title="Drag to reorder">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="5" cy="4" r="1.2" fill="currentColor"/>
+          <circle cx="11" cy="4" r="1.2" fill="currentColor"/>
+          <circle cx="5" cy="8" r="1.2" fill="currentColor"/>
+          <circle cx="11" cy="8" r="1.2" fill="currentColor"/>
+          <circle cx="5" cy="12" r="1.2" fill="currentColor"/>
+          <circle cx="11" cy="12" r="1.2" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="image-card-preview">
+        <img alt="Preview" />
+      </div>
+      <div class="image-card-info">
+        <span class="image-card-name"></span>
+        <div class="image-card-meta">
+          <span class="image-card-dimensions"></span>
+          <span class="image-card-size"></span>
+          <span class="image-card-order"></span>
+        </div>
+      </div>
+      <button class="image-card-remove" title="Remove image">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <div class="image-card-index"></div>
+    </div>
+  </template>
+
+  <script src="script.js"></script>
+</body>
+</html>

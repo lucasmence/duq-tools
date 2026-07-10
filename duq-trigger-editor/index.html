@@ -1,0 +1,4504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="icon.png" />
+<title>Duq Trigger Editor - Trigger Script Editor</title>
+<style>
+/* ===== ROOT VARIABLES (Monokai) ===== */
+:root {
+  --bg-primary: #272822;
+  --bg-secondary: #1e1f1c;
+  --bg-tertiary: #3e3d32;
+  --bg-editor: #1b1c18;
+  --bg-gutter: #1e1f1c;
+  --text-primary: #f8f8f2;
+  --text-secondary: #75715e;
+  --text-muted: #49483e;
+  --accent-yellow: #e6db74;
+  --accent-green: #a6e22e;
+  --accent-orange: #fd971f;
+  --accent-pink: #f92672;
+  --accent-purple: #ae81ff;
+  --accent-blue: #66d9ef;
+  --accent-cyan: #a1efe4;
+  --accent-red: #f92672;
+  --accent-comment: #75715e;
+  --indent-guide: rgba(255,255,255,0.06);
+  --border-color: #3e3d32;
+  --line-hover: rgba(255,255,255,0.03);
+  --cursor-color: #f8f8f2;
+  --selection-bg: rgba(249,38,114,0.3);
+  --scrollbar-bg: #1e1f1c;
+  --scrollbar-thumb: #3e3d32;
+  --scrollbar-thumb-hover: #49483e;
+  --toolbar-bg: #1e1f1c;
+  --btn-bg: #3e3d32;
+  --btn-hover: #49483e;
+  --btn-text: #f8f8f2;
+  --btn-primary-bg: #a6e22e;
+  --btn-primary-hover: #86c22e;
+  --btn-primary-text: #1b1c18;
+  --status-bar-bg: #1e1f1c;
+  --status-text: #75715e;
+  --error-bg: rgba(249,38,114,0.15);
+  --error-text: #f92672;
+  --success-bg: rgba(166,38,46,0.15);
+  --success-text: #a6e22e;
+  --font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
+  --font-size: 14px;
+  --line-height: 1.6;
+  --gutter-width: 52px;
+}
+
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+  line-height: var(--line-height);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-bg); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+
+/* ===== LAYOUT ===== */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg-primary);
+}
+
+/* ===== VS CODE-STYLE SIDEBAR ===== */
+.main-content {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.activity-bar {
+  width: 48px;
+  background: #1e1f1c;
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 0;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.activity-bar-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 4px;
+  margin: 2px 0;
+  transition: all 0.12s ease;
+  position: relative;
+}
+
+.activity-bar-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.06);
+}
+
+.activity-bar-btn.active {
+  color: var(--accent-pink);
+}
+
+.activity-bar-btn.active::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: var(--accent-pink);
+  border-radius: 1px;
+}
+
+.activity-bar-spacer {
+  flex: 1;
+}
+
+.sidebar-panel {
+  width: 260px;
+  background: #1e1f1c;
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: width 0.2s ease;
+}
+
+.sidebar-panel.collapsed {
+  width: 0;
+  border-right: none;
+}
+
+.sidebar-header {
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.sidebar-header-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.sidebar-header-btn {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 3px;
+  transition: all 0.1s;
+}
+
+.sidebar-header-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.08);
+}
+
+.file-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.file-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-primary);
+  transition: background 0.1s;
+  border-left: 3px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-list-item:hover {
+  background: rgba(255,255,255,0.04);
+}
+
+.file-list-item.active {
+  background: rgba(249,38,114,0.12);
+  border-left-color: var(--accent-pink);
+}
+
+.file-list-item .file-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.file-list-item .file-close {
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.1s;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.file-list-item:hover .file-close {
+  opacity: 0.7;
+}
+
+.file-list-item .file-close:hover {
+  opacity: 1;
+  background: rgba(255,255,255,0.08);
+}
+
+.file-list-empty {
+  padding: 20px 14px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* ===== TOOLBAR ===== */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--toolbar-bg);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  flex-wrap: wrap;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 22px;
+  background: var(--border-color);
+  margin: 0 6px;
+}
+
+.app-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent-pink);
+  margin-right: 10px;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.app-title-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  border-radius: 3px;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.app-title:hover .app-title-icon {
+  transform: scale(1.15);
+}
+
+.app-title .subtitle {
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--text-secondary);
+  letter-spacing: normal;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  font-family: var(--font-family);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  background: var(--btn-hover);
+  border-color: var(--text-muted);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border-color: var(--btn-primary-bg);
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background: var(--btn-primary-hover);
+  border-color: var(--btn-primary-hover);
+}
+
+.btn-danger {
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+}
+
+.btn-danger:hover {
+  background: rgba(249,38,114,0.15);
+}
+
+.btn-icon {
+  padding: 5px 8px;
+  font-size: 14px;
+}
+
+.btn[title] { position: relative; }
+
+/* ===== DRAG & DROP OVERLAY ===== */
+.drop-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(39,40,34,0.85);
+  border: 3px dashed var(--accent-green);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--accent-green);
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.drop-overlay.active { display: flex; }
+
+/* ===== AUTOCOMPLETE ===== */
+.autocomplete-wrapper {
+  position: absolute;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.autocomplete-wrapper.active {
+  pointer-events: auto;
+}
+
+.autocomplete-dropdown {
+  background: #2d2e2a;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+  min-width: 180px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  font-family: var(--font-family);
+  font-size: 12px;
+}
+
+.autocomplete-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 12px;
+  cursor: pointer;
+  color: var(--text-primary);
+  white-space: nowrap;
+  transition: background 0.1s;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.selected {
+  background: rgba(249,38,114,0.25);
+}
+
+.autocomplete-item .match {
+  color: var(--accent-yellow);
+  font-weight: 600;
+}
+
+.autocomplete-item .label-tag {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-left: 10px;
+  flex-shrink: 0;
+}
+
+.autocomplete-item .label-tag.event { color: var(--accent-blue); background: rgba(102,217,239,0.1); }
+.autocomplete-item .label-tag.condition { color: var(--accent-purple); background: rgba(174,129,255,0.1); }
+.autocomplete-item .label-tag.action { color: var(--accent-green); background: rgba(166,226,46,0.1); }
+.autocomplete-item .label-tag.meta { color: var(--accent-orange); background: rgba(253,151,31,0.1); }
+.autocomplete-item .label-tag.keyword { color: var(--accent-pink); background: rgba(249,38,114,0.1); }
+.autocomplete-item .label-tag.arg { color: var(--accent-cyan); background: rgba(161,239,228,0.1); }
+
+.autocomplete-empty {
+  padding: 10px 12px;
+  color: var(--text-secondary);
+  font-style: italic;
+  text-align: center;
+}
+
+/* ===== SPLIT VIEW ===== */
+.editor-wrapper {
+  flex: 1;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-editor);
+}
+
+.editor-container {
+  flex: 1;
+  display: flex;
+  position: relative;
+  overflow: auto;
+}
+
+.gutter {
+  flex-shrink: 0;
+  width: var(--gutter-width);
+  background: var(--bg-gutter);
+  border-right: 1px solid var(--border-color);
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  text-align: right;
+  position: relative;
+}
+
+.gutter-line {
+  height: calc(var(--font-size) * var(--line-height));
+  padding: 0 12px 0 6px;
+  font-size: 12px;
+  line-height: calc(var(--font-size) * var(--line-height));
+  color: var(--text-muted);
+  font-family: var(--font-family);
+  transition: color 0.15s;
+  white-space: pre;
+  position: relative;
+}
+
+.gutter-line.has-error { color: var(--accent-red); }
+.gutter-line.has-warning { color: var(--accent-orange); }
+
+.gutter-line .gutter-marker {
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  pointer-events: none;
+}
+
+.gutter-tooltip {
+  position: fixed;
+  z-index: 1000;
+  background: #2d2e2a;
+  border: 1px solid #49483e;
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-size: 11px;
+  line-height: 1.5;
+  max-width: 400px;
+  white-space: normal;
+  word-break: break-word;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+
+.gutter-tooltip .tooltip-line {
+  padding: 2px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.gutter-tooltip .tooltip-line .tt-icon {
+  flex-shrink: 0;
+  font-size: 11px;
+  margin-top: 1px;
+}
+
+.gutter-tooltip .tooltip-line.error .tt-icon { color: var(--accent-red); }
+.gutter-tooltip .tooltip-line.warning .tt-icon { color: var(--accent-orange); }
+.gutter-tooltip .tooltip-line .tt-text { color: var(--text-primary); }
+.gutter-tooltip .tooltip-line.error .tt-text { color: var(--accent-red); }
+.gutter-tooltip .tooltip-line.warning .tt-text { color: var(--accent-orange); }
+
+.gutter-line.active {
+  color: var(--accent-yellow);
+}
+
+.code-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.code-textarea {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 10px 16px;
+  margin: 0;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--cursor-color);
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+  line-height: var(--line-height);
+  white-space: pre;
+  tab-size: 4;
+  -moz-tab-size: 4;
+  overflow: auto;
+  z-index: 10;
+  pointer-events: auto;
+  box-sizing: border-box;
+}
+
+.code-textarea::selection {
+  background: var(--selection-bg);
+}
+
+.code-output {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 10px 16px;
+  margin: 0;
+  border: none;
+  background: transparent;
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+  line-height: var(--line-height);
+  white-space: pre;
+  word-wrap: break-word;
+  overflow: hidden;
+  tab-size: 4;
+  -moz-tab-size: 4;
+  pointer-events: none;
+  z-index: 5;
+  box-sizing: border-box;
+  color: var(--text-primary);
+}
+
+.code-output .comment { color: var(--accent-comment); font-style: italic; }
+.code-output .keyword { color: var(--accent-pink); font-weight: 600; }
+.code-output .event-type { color: var(--accent-blue); }
+.code-output .condition-type { color: var(--accent-purple); }
+.code-output .action-type { color: var(--accent-green); }
+.code-output .string { color: var(--accent-yellow); }
+.code-output .number { color: var(--accent-orange); }
+.code-output .boolean { color: var(--accent-purple); }
+.code-output .named-key { color: var(--accent-cyan); }
+.code-output .operator { color: var(--accent-pink); }
+.code-output .punctuation { color: var(--text-secondary); }
+.code-output .meta-key { color: var(--accent-orange); font-weight: 600; }
+
+/* ===== DOCUMENTATION POPUP ===== */
+#docContent h1 { color: var(--accent-pink); font-size: 18px; margin: 0 0 12px 0; padding-bottom: 8px; border-bottom: 1px solid #3e3d32; font-weight: 700; }
+#docContent h2 { color: var(--accent-blue); font-size: 15px; margin: 20px 0 8px 0; font-weight: 600; }
+#docContent h3 { color: var(--accent-yellow); font-size: 13px; margin: 16px 0 6px 0; font-weight: 600; }
+#docContent p { margin: 0 0 10px 0; color: var(--text-primary); }
+#docContent ul { margin: 6px 0 10px 0; padding-left: 20px; }
+#docContent li { margin: 3px 0; color: var(--text-primary); }
+#docContent code { background: #2d2e2a; color: var(--accent-green); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+#docContent pre { background: #2d2e2a; border: 1px solid #3e3d32; border-radius: 4px; padding: 12px 14px; margin: 8px 0 14px 0; overflow-x: auto; }
+#docContent pre code { background: none; padding: 0; border: none; color: var(--text-primary); font-size: 12px; line-height: 1.5; }
+#docContent table { border-collapse: collapse; margin: 8px 0 14px 0; width: 100%; font-size: 12px; }
+#docContent th { background: #2d2e2a; color: var(--accent-yellow); padding: 6px 10px; text-align: left; border: 1px solid #3e3d32; font-weight: 600; }
+#docContent td { padding: 5px 10px; border: 1px solid #3e3d32; color: var(--text-primary); }
+#docContent tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+#docContent hr { border: none; border-top: 1px solid #3e3d32; margin: 16px 0; }
+#docContent strong { color: var(--accent-pink); }
+
+/* ===== JSON PREVIEW SYNTAX HIGHLIGHT ===== */
+.jk { color: var(--accent-cyan); } /* key */
+.jc { color: var(--text-secondary); } /* colon */
+.js { color: var(--accent-yellow); } /* string value */
+.jn { color: var(--accent-orange); } /* number */
+.jb { color: var(--accent-purple); } /* boolean/null */
+.jp { color: var(--text-muted); } /* punctuation */
+
+/* ===== COMPILE LOG PANEL ===== */
+.compile-modal {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.75);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-family);
+}
+.compile-panel {
+  background: #1b1c18;
+  border: 1px solid #3e3d32;
+  border-radius: 6px;
+  width: min(700px, 90vw);
+  max-height: min(500px, 80vh);
+  display: flex; flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+.compile-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #3e3d32;
+  flex-shrink: 0;
+}
+.compile-header .title {
+  font-size: 14px; font-weight: 700;
+  display: flex; align-items: center; gap: 8px;
+}
+.compile-header .title.success { color: var(--accent-green); }
+.compile-header .title.error { color: var(--accent-red); }
+.compile-header .title.warning { color: var(--accent-orange); }
+.compile-header .stats {
+  margin-left: auto;
+  font-size: 11px; color: var(--text-secondary);
+}
+.compile-close {
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; border: none; background: transparent;
+  color: var(--text-muted); border-radius: 4px;
+  font-size: 14px; transition: all 0.1s;
+  flex-shrink: 0;
+}
+.compile-close:hover { color: var(--text-primary); background: rgba(255,255,255,0.08); }
+.compile-body {
+  flex: 1; overflow-y: auto; padding: 8px 0;
+}
+.compile-msg {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 6px 16px;
+  font-size: 12px; line-height: 1.5;
+  cursor: pointer; transition: background 0.1s;
+}
+.compile-msg:hover { background: rgba(255,255,255,0.03); }
+.compile-msg .icon { flex-shrink: 0; font-size: 13px; margin-top: 1px; }
+.compile-msg.error .icon { color: var(--accent-red); }
+.compile-msg.warning .icon { color: var(--accent-orange); }
+.compile-msg.success .icon { color: var(--accent-green); }
+.compile-msg.info .icon { color: var(--accent-blue); }
+.compile-msg .line-num {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 11px;
+  min-width: 32px;
+  text-align: right;
+}
+.compile-msg .line-num:hover {
+  color: var(--accent-yellow);
+  text-decoration: underline;
+}
+.compile-msg .text { color: var(--text-primary); word-break: break-word; }
+.compile-msg.error .text { color: var(--accent-red); }
+.compile-msg.warning .text { color: var(--accent-orange); }
+.compile-footer {
+  padding: 8px 16px;
+  border-top: 1px solid #3e3d32;
+  display: flex; justify-content: flex-end; gap: 6px;
+  flex-shrink: 0;
+}
+
+.indent-guides-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* ===== STATUS BAR ===== */
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 14px;
+  background: var(--status-bar-bg);
+  border-top: 1px solid var(--border-color);
+  font-size: 11px;
+  color: var(--status-text);
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.status-bar .status-left { display: flex; align-items: center; gap: 16px; }
+.status-bar .status-right { display: flex; align-items: center; gap: 16px; }
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot.ready { background: var(--accent-green); }
+.status-dot.error { background: var(--accent-red); }
+.status-dot.warning { background: var(--accent-orange); }
+
+/* ===== NOTIFICATION ===== */
+.notification {
+  position: fixed;
+  top: 54px;
+  right: 14px;
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 1000;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+  font-family: var(--font-family);
+  max-width: 400px;
+  word-break: break-word;
+}
+
+.notification.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.notification.error {
+  background: var(--error-bg);
+  border: 1px solid var(--accent-red);
+  color: var(--error-text);
+}
+
+.notification.success {
+  background: var(--success-bg);
+  border: 1px solid var(--accent-green);
+  color: var(--success-text);
+}
+
+.notification.info {
+  background: rgba(102,217,239,0.1);
+  border: 1px solid var(--accent-blue);
+  color: var(--accent-blue);
+}
+
+/* ===== FILE NAME DISPLAY ===== */
+.file-name {
+  color: var(--text-secondary);
+  font-size: 11px;
+  padding: 2px 10px;
+  background: var(--bg-primary);
+  border-radius: 3px;
+  border: 1px solid var(--border-color);
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-name .name { color: var(--accent-yellow); }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 600px) {
+  :root { --font-size: 12px; --gutter-width: 40px; }
+  .toolbar { padding: 6px 10px; gap: 4px; }
+  .app-title { font-size: 13px; }
+  .app-title .subtitle { display: none; }
+  .btn { font-size: 11px; padding: 4px 8px; }
+  .toolbar-divider { margin: 0 3px; }
+}
+
+/* ===== DEMO NOTIFICATION ===== */
+.demo-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--bg-primary);
+  background: var(--accent-yellow);
+  border-radius: 3px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* ===== SPLASH SCREEN ===== */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+  animation: splashFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.splash.hiding {
+  animation: splashFadeOut 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+.splash-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  animation: splashScaleIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.splash-icon {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-xl, 16px);
+  box-shadow: 0 0 0 1px var(--border-color), 0 8px 32px rgba(0, 0, 0, 0.5);
+  image-rendering: pixelated;
+}
+
+.splash-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--accent-pink);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.splash-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin-top: -12px;
+}
+
+.splash-loader {
+  width: 160px;
+  height: 3px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.splash-loader-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent-pink), var(--accent-purple));
+  border-radius: 4px;
+  animation: splashLoad 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes splashFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes splashFadeOut {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.05); }
+}
+
+@keyframes splashScaleIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes splashLoad {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+</style>
+</head>
+<body>
+  <!-- Splash Screen -->
+  <div class="splash" id="splash">
+    <div class="splash-content">
+      <img class="splash-icon" src="icon.png" alt="Duq Trigger Editor" />
+      <h1 class="splash-title">Duq Trigger Editor</h1>
+      <p class="splash-subtitle">Trigger Script Editor</p>
+      <div class="splash-loader">
+        <div class="splash-loader-bar"></div>
+      </div>
+    </div>
+  </div>
+
+<div class="app-container">
+
+  <!-- ========== TOOLBAR ========== -->
+  <div class="toolbar">
+    <div class="app-title">
+      <img src="icon.png" alt="Duq Trigger Editor" class="app-title-icon" />
+      Duq Trigger Editor
+      <span class="subtitle">Trigger Script Editor</span>
+    </div>
+
+    <div class="toolbar-divider"></div>
+
+    <button class="btn btn-primary" onclick="loadFile()" title="Open JSON file (Ctrl+O)">📂 Open</button>
+    <button class="btn btn-primary" onclick="saveFile()" title="Save as JSON (Ctrl+S)">💾 Save</button>
+
+    <div class="toolbar-divider"></div>
+
+    <button class="btn" onclick="previewJson()" title="Preview generated JSON">👁 Preview JSON</button>
+    <button class="btn" onclick="toggleWrap()" title="Toggle word wrap">📏 Wrap</button>
+    <button class="btn" onclick="clearEditor()" title="New script">🗑️ New</button>
+
+    <div class="toolbar-divider"></div>
+
+    <button class="btn btn-primary" onclick="openDocs()" title="Open documentation (Ctrl+D)">📖 Docs</button>
+    <button class="btn btn-danger" onclick="compileScript()" title="Validate script and generate JSON">✔ Compile</button>
+
+    <div class="toolbar-divider"></div>
+
+    <span id="fileNameDisplay" class="file-name" style="display:none;">
+      📄 <span class="name" id="fileNameText">untitled.json</span>
+    </span>
+  </div>
+
+  <!-- ========== MAIN CONTENT ========== -->
+  <div class="main-content">
+
+    <!-- ========== ACTIVITY BAR ========== -->
+    <div class="activity-bar" id="activityBar">
+      <button class="activity-bar-btn active" id="btnFiles" onclick="toggleSidebar('files')" title="Explorer (Ctrl+E)">📁</button>
+      <div class="activity-bar-spacer"></div>
+      <button class="activity-bar-btn" id="btnDocs" onclick="openDocs()" title="Documentation (Ctrl+D)">📖</button>
+      <button class="activity-bar-btn" id="btnSettings" onclick="toggleWrap()" title="Toggle word wrap">📏</button>
+    </div>
+
+    <!-- ========== SIDEBAR ========== -->
+    <div class="sidebar-panel" id="sidebarPanel">
+      <div class="sidebar-header">
+        <span>OPEN EDITORS</span>
+        <div class="sidebar-header-actions">
+          <button class="sidebar-header-btn" onclick="loadFile()" title="Open file">+</button>
+          <button class="sidebar-header-btn" onclick="closeAllFiles()" title="Close all">✕</button>
+        </div>
+      </div>
+      <div class="file-list" id="fileList">
+        <div class="file-list-empty">No open files<br>Click 📁 or use Ctrl+O to open a JSON file</div>
+      </div>
+    </div>
+
+    <!-- ========== EDITOR ========== -->
+    <div class="editor-wrapper" id="editorWrapper">
+      <div class="editor-container" id="editorContainer">
+        <div class="gutter" id="gutter"></div>
+        <div class="code-area" id="codeArea">
+          <textarea class="code-textarea" id="codeInput" spellcheck="false"
+            autocomplete="off" autocorrect="off" autocapitalize="off" wrap="off"
+            placeholder="Open a JSON file to begin editing..."></textarea>
+          <div class="code-output" id="codeOutput"></div>
+          <div class="indent-guides-container" id="indentGuides"></div>
+        </div>
+      </div>
+      <div class="drop-overlay" id="dropOverlay">📂 Drop JSON file here</div>
+    <div class="autocomplete-wrapper" id="autocompleteWrapper" style="display:none;">
+      <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
+    </div>
+    </div>
+
+  </div>
+
+  <!-- ========== STATUS BAR ========== -->
+  <div class="status-bar">
+    <div class="status-left">
+      <span class="status-indicator">
+        <span class="status-dot ready" id="statusDot"></span>
+        <span id="statusText">Ready</span>
+      </span>
+      <span id="statusExtra"></span>
+    </div>
+    <div class="status-right">
+      <span id="lineColInfo">Ln 1, Col 1</span>
+      <span id="charCount">0 chars</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========== NOTIFICATION ========== -->
+<div class="notification" id="notification"></div>
+
+<script>
+// ================================================================
+//  DUQ TRIGGER EDITOR — Pseudo-language ↔ JSON Converter & Editor
+//  Created by Mence
+// ================================================================
+
+// ─── STATE ─────────────────────────────────────────────────────
+const state = {
+  fileName: null,
+  sourceJson: null,
+  recentFiles: [],
+  sidebarView: 'files',
+  sidebarCollapsed: false,
+  text: '',
+  wordWrap: false,
+  parseError: null,
+  compileErrors: {},  // lineNum -> [{type, text}, ...]
+  compileErrorCount: 0,
+};
+
+// ─── DOM REFS ──────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const codeInput = $('codeInput');
+const codeOutput = $('codeOutput');
+const gutter = $('gutter');
+const indentGuides = $('indentGuides');
+const statusText = $('statusText');
+const statusDot = $('statusDot');
+const lineColInfo = $('lineColInfo');
+const charCount = $('charCount');
+const fileNameDisplay = $('fileNameDisplay');
+const fileNameText = $('fileNameText');
+const notification = $('notification');
+const sidebarPanel = $('sidebarPanel');
+const fileList = $('fileList');
+const dropOverlay = $('dropOverlay');
+const editorWrapper = $('editorWrapper');
+const statusExtra = $('statusExtra');
+
+// ================================================================
+//  LANGUAGE SPEC
+// ================================================================
+//  Syntax:
+//    on <event-type>[(<args>)]
+//        [if <cond-type>(<args>) [and/or <cond-type>(<args>) ...]]
+//            then:
+//                <action-type>(<args>)
+//
+//  Args:  "string", 123, 45.6, true/false,  key: value
+//  Meta:  @key: value
+//
+//  Events, conditions & actions defined below.
+
+const EVENT_TYPES = new Set([
+  'initialization','unit-kill','region-between-units','dialog-box-close',
+  'unit-cast-ability','distance-between-units','unit-use-item','call-event',
+  'region-entered','item-dropped','item-picked'
+]);
+
+const CONDITION_TYPES = new Set([
+  'game-event-check','unit-check-target','unit-check-stats','dialog-box-option',
+  'get-game-context','unit-check-target-ability-hotkey','unit-check-used-item',
+  'player-control-type','get-global-variable','unit-check-alive','region-check-item',
+  'region-check-unit','unit-player-check-item','map-check-visited','unit-check-type',
+  'unit-check-picked-item','unit-check-casted-ability'
+]);
+
+const ACTION_TYPES = new Set([
+  'game-event-change','camera-move-unit','camera-lock-hero','menu-show',
+  'system-sleep','text-dialog','unit-intelligence-range-min-change',
+  'set-gold-all-players','text-messagebox','text-dialogbox',
+  'add-gold-all-players','spawn-item','add-item','trigger-reset',
+  'remove-skill-all','remove-passive-all','clear-storage','add-skill',
+  'add-passive','disable-skill','set-game-context','unit-edit-status',
+  'spawn-unit','spawn-unit-region','unit-edit-exp','unit-pause',
+  'unit-unpause','add-special-effect','unit-teleport','unit-kill',
+  'unit-remove','unit-change-name','item-remove','unit-cast-skill',
+  'spawn-merchant','merchant-remove','merchant-remove-all',
+  'merchant-update','unit-mass-enemy-kill','unit-mass-kill-type',
+  'delete-save','game-select-subclass','unit-hide','unit-unhide',
+  'add-sfx','play-animation','call-event','prop-play-animation',
+  'environment-play-animation','camera-move-prop','camera-move-region',
+  'camera-shake','play-sound','portal-enable','set-global-variable',
+  'prop-kill','block-map-teleport','unit-cast-skill-region',
+  'unit-teleport-region','unit-move-unit','unit-move-region',
+  'spawn-item-region','region-terrain-animation','region-terrain-remove',
+  'apply-map-fog','break-map-fog','music-change','spawn-environment',
+  'music-pause','travel-block','unit-set-dialog-value','wall-remove',
+  'check-official-custom-map','check-campaign-endgame','check-campaign-final',
+  'change-mass-environment','change-map-particles','show-help-tooltip',
+  'reset-unit','remove-skills-hotkey','add-environment-sfx',
+  'add-environment-sfx-region','enable-skill-tree','clear-skill-tree',
+  'clear-passive-tree','set-food','move-all-items-region',
+  'take-all-items-region','minimap-disable','environment-play-animation-region',
+  'add-wall','fog-toggle','add-intro-sound','play-intro-sound',
+  'erase-world','exit','show-credits-label','toggle-control',
+  'toggle-extra-modes','extra-modes-info'
+]);
+
+// ─── AUTOCOMPLETE DATA ────────────────────────────────────────
+
+const META_KEYS = [
+  'item-drop', 'item-drop-list', 'procedural', 'procedural-list',
+  'procedural-room-size', 'procedural-exit-door', 'unit-spawn-range',
+  'unit-spawn-limit', 'unit-spawn', 'merchant-spawn-chance', 'merchant-spawn',
+  'exit', 'special-exits-chance', 'special-exits',
+  'list-items-spawn',
+  'list-food-spawn',
+  'environments-drop', 'environments-drop-hit',
+  'list-chests-spawn',
+  'list-shrines-spawn',
+  'musics'
+];
+
+// ================================================================
+//  DOCUMENTATION DATA (embedded from documentation/*.md)
+// ================================================================
+
+const DOCS = {
+  'README': {
+    title: 'Overview',
+    order: 0,
+    content: `# Boltcraft Trigger System Documentation
+
+This documentation covers the trigger system used in Boltcraft Classic (b1) and Boltcraft 2 (b2). Triggers allow map creators to define interactive events, conditions, and actions that control gameplay logic.
+
+## Quick Overview
+
+A trigger file (\`.json\`) lives alongside each map file in a \`trigger/\` subfolder. It contains:
+
+\`\`\`duq
+{
+    "trigger": [
+        {
+            "events": [ ... ],
+            "conditions": [ ... ],
+            "then": [ ... ]
+        }
+    ],
+    "item-drop": [ ... ],
+    "item-drop-list": [ ... ]
+}
+\`\`\`
+
+Each **trigger** watches for one or more **events**, optionally checks **conditions**, and executes **actions** when conditions are met.`
+  },
+  'trigger-file-format': {
+    title: 'File Format',
+    order: 1,
+    content: `# Trigger File Format
+
+Trigger files (.json) are stored in a \`trigger/\` subfolder alongside each map file. The filename matches the map filename (e.g., \`maps/custom/sandbox.json\` → \`maps/custom/trigger/sandbox.json\`).
+
+## Top-Level Structure
+
+\`\`\`duq
+{
+    "trigger": [ ... ],
+    "item-drop": [ ... ],
+    "item-drop-list": [ ... ],
+    "environments-drop": [ ... ],
+    "environments-drop-hit": [ ... ],
+    "procedural": false,
+    "procedural-list": "",
+    "procedural-room-size": 10,
+    "procedural-exit-door": "",
+    "unit-spawn-range": 500,
+    "unit-spawn-limit": 10,
+    "unit-spawn": [ ... ],
+    "merchant-spawn-chance": 0.25,
+    "merchant-spawn": [ ... ],
+    "exit": "",
+    "special-exits-chance": 0.25,
+    "special-exits": [ ... ],
+    "min-food-spawn": 1,
+    "max-food-spawn": 3,
+    "list-food-spawn": [ ... ],
+    "min-chests-spawn": 0,
+    "max-chests-spawn": 0,
+    "list-chests-spawn": [ ... ],
+    "slider-sfx": ""
+}
+\`\`\`
+
+## Fields
+
+### \`trigger\` (array)
+Array of trigger objects. Each trigger has:
+- \`events\` (array) — One or more event objects
+- \`conditions\` (array, optional) — Conditions that must be met
+- \`then\` (array) — Actions to execute
+
+### \`item-drop\` (array)
+Named loot drops from specific units/chests.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| \`name\` | string | Name of the drop table (referenced by units) |
+| \`chance\` | integer | Drop chance percentage (0–100) |
+| \`drops\` | array | Array of \`{\"value\": \"item/path\"}\` objects |
+
+### \`item-drop-list\` (array)
+Level-based random loot drops.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| \`chance\` | integer | Drop chance percentage |
+| \`level-minimum\` | integer | Minimum player level |
+| \`level-maximum\` | integer | Maximum player level |
+| \`summoned\` | boolean | Whether this applies to summoned units |
+| \`drops\` | array | Array of \`{\"value\": \"item/path\"}\` objects |
+
+### \`environments-drop\` (array)
+Loot dropped when destroying environment objects.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| \`chance\` | integer | Drop chance percentage |
+| \`drops\` | array | Array of \`{\"value\": \"item/path\"}\` objects |
+
+### \`environments-drop-hit\` (array)
+Loot dropped when hitting (but not destroying) environment objects. Same structure as \`environments-drop\`.
+
+### Procedural Fields
+| Field | Type | Description |
+|-------|------|-------------|
+| \`procedural\` | boolean | Enable procedural map generation |
+| \`procedural-list\` | string | Room list file for procedural generation |
+| \`procedural-room-size\` | integer | Size of procedural rooms |
+| \`procedural-exit-door\` | string | Environment file for exit doors |
+
+### Unit Spawning
+| Field | Type | Description |
+|-------|------|-------------|
+| \`unit-spawn-range\` | integer | Range from player for spawning units |
+| \`unit-spawn-limit\` | integer | Maximum number of spawned units |
+| \`unit-spawn\` | array | Array of \`{\"value\": \"unit/path\"}\` objects |
+
+### Merchant Spawning
+| Field | Type | Description |
+|-------|------|-------------|
+| \`merchant-spawn-chance\` | float | Chance of a merchant spawning (0.0–1.0) |
+| \`merchant-spawn\` | array | Array of \`{\"value\": \"merchant/path\"}\` objects |
+
+### Map Exits
+| Field | Type | Description |
+|-------|------|-------------|
+| \`exit\` | string | Default exit map path |
+| \`special-exits-chance\` | float | Chance of a special exit appearing |
+| \`special-exits\` | array | Array of \`{\"value\": \"map/path\"}\` objects |
+
+### Food & Chest Spawning
+| Field | Type | Description |
+|-------|------|-------------|
+| \`min-food-spawn\` | integer | Minimum food items to spawn |
+| \`max-food-spawn\` | integer | Maximum food items to spawn |
+| \`list-food-spawn\` | array | Array of \`{\"value\": \"food/path\"}\` objects |
+| \`min-chests-spawn\` | integer | Minimum chests to spawn |
+| \`max-chests-spawn\` | integer | Maximum chests to spawn |
+| \`list-chests-spawn\` | array | Array of \`{\"value\": \"chest/path\"}\` objects |
+
+### Other
+| Field | Type | Description |
+|-------|------|-------------|
+| \`slider-sfx\` | string | Sound effect for slider portals |
+
+## Trigger Object Structure
+
+\`\`\`duq
+{
+    "events": [
+        { "event": "initialization" }
+    ],
+    "conditions": [
+        { "condition": "get-game-context", "strings": [{"value": "start"}] }
+    ],
+    "then": [
+        { "action": "set-gold-all-players", "integerValue": 999999 },
+        { "action": "system-sleep", "floatValue": 1.0 }
+    ]
+}
+\`\`\`
+
+### Event fields
+| Field | Type | Description |
+|-------|------|-------------|
+| \`event\` | string | Event type identifier |
+| \`unitName\` | string | Target unit name (event-specific) |
+| \`floatValue\` | float | Numeric value (event-specific) |
+| \`integerValue\` | integer | Numeric value (event-specific) |
+
+### Condition fields
+| Field | Type | Description |
+|-------|------|-------------|
+| \`condition\` | string | Condition type identifier |
+| \`unitName\` | string | Target unit name |
+| \`floatValue\` | float | Numeric value |
+| \`integerValue\` | integer | Numeric value |
+| \`strings\` | array | Array of \`{\"value\": \"...\"}\` |
+| \`integers\` | array | Array of \`{\"value\": N}\` |
+| \`floats\` | array | Array of \`{\"value\": N.N}\` |
+| \`booleans\` | array | Array of \`{\"value\": true/false}\` |
+
+### Action fields
+| Field | Type | Description |
+|-------|------|-------------|
+| \`action\` | string | Action type identifier |
+| \`unitName\` | string | Target unit name |
+| \`integerValue\` | integer | Single integer value |
+| \`floatValue\` | float | Single float value |
+| \`strings\` | array | Array of \`{\"value\": \"...\"}\` |
+| \`integers\` | array | Array of \`{\"value\": N}\` |
+| \`floats\` | array | Array of \`{\"value\": N.N}\` |
+| \`booleans\` | array | Array of \`{\"value\": true/false}\` |`
+  },
+  'events': {
+    title: 'Events',
+    order: 2,
+    content: `# Events
+
+Events define **what** triggers a script to run. When any event in the trigger's event list fires, the trigger checks its conditions and executes actions.
+
+## Event Type Reference
+
+### \`initialization\`
+Fires once when the map is first loaded.
+
+\`\`\`duq
+on initialization
+\`\`\`
+
+**Behavior:** Always triggers on map load. Does not require any additional fields.
+
+---
+
+### \`unit-kill\`
+Fires when a specific unit dies.
+
+\`\`\`duq
+on unit-kill(unit: "boss-1")
+\`\`\`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| \`unitName\` | string | Yes | Name of the unit to watch for death |
+
+---
+
+### \`region-between-units\`
+Fires when a unit comes within a certain distance of another unit.
+
+\`\`\`duq
+on region-between-units(float: 200, unit: "teacher-combat")
+\`\`\`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| \`unitName\` | string | Yes | Name of the unit to check distance from |
+| \`floatValue\` | float | Yes | Maximum distance (range) in pixels |
+
+---
+
+### \`distance-between-units\`
+Fires when a unit moves beyond a certain distance from another unit.
+
+\`\`\`duq
+on distance-between-units(float: 500, unit: "hero")
+\`\`\`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| \`unitName\` | string | Yes | Name of the unit to check distance from |
+| \`floatValue\` | float | Yes | Minimum distance in pixels |
+
+---
+
+### \`region-entered\`
+Fires when a unit enters a specific region/portal area.
+
+\`\`\`duq
+on region-entered(int: 10, unit: "hero")
+\`\`\`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| \`unitName\` | string | Yes | Name of the unit to check |
+| \`integerValue\` | integer | Yes | Portal/region index to check against |
+
+---
+
+### \`dialog-box-close\`
+Fires when any dialog box is closed by the player.
+
+\`\`\`duq
+on dialog-box-close
+\`\`\`
+
+---
+
+### \`unit-cast-ability\`
+Fires when any unit casts an ability.
+
+\`\`\`duq
+on unit-cast-ability
+\`\`\`
+
+---
+
+### \`unit-use-item\`
+Fires when any unit uses an item.
+
+\`\`\`duq
+on unit-use-item
+\`\`\`
+
+---
+
+### \`call-event\`
+Fires when triggered by the \`call-event\` action from another trigger.
+
+\`\`\`duq
+on call-event
+\`\`\`
+
+---
+
+### \`item-dropped\`
+Fires when any item is dropped on the ground.
+
+\`\`\`duq
+on item-dropped
+\`\`\`
+
+---
+
+### \`item-picked\`
+Fires when any unit picks up an item.
+
+\`\`\`duq
+on item-picked
+\`\`\`
+
+## Event Behavior Notes
+
+- Events use **OR logic**: if any one of the trigger's events fires, the trigger proceeds to check conditions.
+- The triggered event sets \`unitTarget\` on the Event object, which is then passed to conditions and actions.
+- Events that watch specific units (like \`unit-kill\`, \`region-between-units\`) update their unit reference each frame to handle units being destroyed/recreated.
+- The \`call-event\` event is the standard way to create multi-step trigger chains.`
+  },
+  'conditions': {
+    title: 'Conditions',
+    order: 3,
+    content: `# Conditions
+
+Conditions define additional checks that must pass for a trigger's actions to execute. All conditions use **AND logic** by default — every condition must pass for the trigger to fire.
+
+## Condition Type Reference
+
+### \`game-event-check\`
+Checks if the current game event type matches a specific value.
+
+\`\`\`duq
+if game-event-check(int: 2)
+\`\`\`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| \`integerValue\` | integer | Yes | Game event ID to compare |
+
+---
+
+### \`unit-check-target\`
+Checks if the triggering unit has a specific name.
+
+\`\`\`duq
+if unit-check-target(unit: "hero")
+\`\`\`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| \`unitName\` | string | Yes | Expected unit name |
+
+---
+
+### \`unit-check-stats\`
+Compares a specific stat/attribute of the triggering unit against a value.
+
+\`\`\`duq
+if unit-check-stats("health", "lower", float: 50.0)
+\`\`\`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| \`strings[0]\` | string | Yes | Attribute name (e.g. health, mana, strength) |
+| \`strings[1]\` | string | Yes | Operator: equal, greater, lower, greater-or-equal, lower-or-equal |
+| \`floats[0]\` | float | Yes | Value to compare against |
+
+---
+
+### \`dialog-box-option\`
+Checks if a specific dialog box option was selected.
+
+\`\`\`duq
+if dialog-box-option(int: 1, int: 2)
+\`\`\`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| \`integers[0]\` | integer | Yes | Dialog box ID |
+| \`integers[1]\` | integer | Yes | Selected option index |
+
+---
+
+### \`get-game-context\`
+Checks the current game context string.
+
+\`\`\`duq
+if get-game-context("battle")
+\`\`\`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| \`strings[0]\` | string | Yes | Expected context string |
+| \`booleans[0]\` | boolean | No | If \`false\` (default), check equality. If \`true\`, check NOT. |
+
+---
+
+### \`unit-check-target-ability-hotkey\`
+Checks if the triggering unit last cast an ability from a specific hotkey slot.
+
+\`\`\`duq
+if unit-check-target-ability-hotkey(int: 1)
+\`\`\`
+
+---
+
+### \`unit-check-used-item\`
+Checks if the triggering unit last used a specific item.
+
+\`\`\`duq
+if unit-check-used-item("healing-potion")
+\`\`\`
+
+---
+
+### \`player-control-type\`
+Checks the control mode of the current player.
+
+\`\`\`duq
+if player-control-type(int: 0)
+\`\`\`
+
+---
+
+### \`get-global-variable\`
+Checks whether a global variable is set to a specific boolean value.
+
+\`\`\`duq
+if get-global-variable("boss-1", true)
+\`\`\`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| \`strings[0]\` | string | Yes | Global variable name |
+| \`booleans[0]\` | boolean | Yes | Expected value |
+
+---
+
+### \`unit-check-alive\`
+Checks if a specific unit is alive or dead.
+
+\`\`\`duq
+if unit-check-alive("hero", true)
+\`\`\`
+
+---
+
+### \`region-check-item\`
+Checks if a specific item exists within a region.
+
+\`\`\`duq
+if region-check-item("key-item", int: 10)
+\`\`\`
+
+---
+
+### \`region-check-unit\`
+Checks if a specific unit exists within a region.
+
+\`\`\`duq
+if region-check-unit("hero", int: 10)
+\`\`\`
+
+---
+
+### \`unit-player-check-item\`
+Checks if a specific unit (or their storage) has a specific item.
+
+\`\`\`duq
+if unit-player-check-item("hero", "silver-key")
+\`\`\`
+
+---
+
+### \`map-check-visited\`
+Checks if a specific map has been visited before.
+
+\`\`\`duq
+if map-check-visited("caves-village")
+\`\`\`
+
+---
+
+### \`unit-check-type\`
+Checks if a unit has a specific type/filename.
+
+\`\`\`duq
+if unit-check-type("characters/bosses/lich")
+\`\`\`
+
+---
+
+### \`unit-check-picked-item\`
+Checks if the triggering unit last picked up a specific item.
+
+\`\`\`duq
+if unit-check-picked-item("wooden-sword")
+\`\`\`
+
+---
+
+### \`unit-check-casted-ability\`
+Checks if the triggering unit last cast a specific ability.
+
+\`\`\`duq
+if unit-check-casted-ability(int: 7)
+\`\`\`
+
+## Condition Logic
+
+- All conditions use **AND** logic by default (every condition must pass).
+- If a trigger has **no conditions**, it always proceeds to execute actions when an event fires.`
+  },
+  'actions': {
+    title: 'Actions',
+    order: 4,
+    content: `# Actions
+
+Actions define **what happens** when a trigger fires. They are executed sequentially in the order defined in the \`"then"\` array.
+
+## Action Type Reference
+
+The following is a categorized reference of all available action types.
+
+### General Conventions
+
+- \`strings[]\` — Array of \`{\"value\": \"text\"}\` objects
+- \`integers[]\` — Array of \`{\"value\": N}\` objects
+- \`floats[]\` — Array of \`{\"value\": N.N}\` objects
+- \`booleans[]\` — Array of \`{\"value\": true/false}\` objects
+- \`integerValue\` — Single integer value
+- \`floatValue\` — Single float value
+- \`unitName\` — Single unit name string
+
+### Game Flow
+- \`game-event-change(int, ?bool)\` — Change game event
+- \`system-sleep(float)\` — Pause for duration
+- \`call-event()\` — Chain to another trigger
+- \`trigger-reset()\` — Allow trigger to fire again
+
+### Camera
+- \`camera-move-unit(unit, ?float)\` — Move camera to unit
+- \`camera-lock-hero(?bool)\` — Lock/unlock camera
+- \`camera-move-prop(unit, ?float)\` — Camera to prop
+- \`camera-move-region(int, ?float)\` — Camera to region
+- \`camera-shake(float)\` — Shake camera
+
+### Units
+- \`spawn-unit(path, alliance, ?name, ?drop, x, y, ?group, ?summoned)\` — Spawn unit
+- \`spawn-unit-region(path, alliance, ?name, ?drop, region, ?group, ?summoned)\` — Spawn at region
+- \`unit-kill(unit)\` — Kill unit
+- \`unit-remove(unit)\` — Remove unit
+- \`unit-hide(unit, float)\` — Hide unit
+- \`unit-unhide(unit)\` — Reveal unit
+- \`unit-pause(unit, float)\` — Pause unit
+- \`unit-unpause(unit)\` — Unpause unit
+- \`unit-teleport(unit, x, y)\` — Teleport unit
+- \`unit-teleport-region(unit, int)\` — Teleport to region
+- \`unit-move-unit(unit, target)\` — Move to unit
+- \`unit-move-region(unit, int)\` — Move to region
+- \`unit-change-name(unit, name)\` — Rename unit
+- \`unit-edit-exp(unit, int, ?add)\` — Edit XP
+- \`unit-edit-status(unit, attr..., values..., ?useAttr, ?add)\` — Edit stats
+- \`reset-unit(unit)\` — Reset to defaults
+- \`unit-cast-skill(caster, target, skill, ?anim)\` — Cast skill at unit
+- \`unit-cast-skill-region(caster, skill, region, ?anim)\` — Cast skill at region
+- \`unit-intelligence-range-min-change(unit, float)\` — Change aggro range
+- \`unit-mass-enemy-kill()\` — Kill all enemies
+- \`unit-mass-kill-type(path)\` — Kill all of type
+
+### Items
+- \`spawn-item(items..., ?stack, ?x, ?y)\` — Spawn item at position
+- \`spawn-item-region(items..., ?stack, region)\` — Spawn item at region
+- \`add-item(items..., ?stack)\` — Add to unit inventory
+- \`item-remove(name)\` — Remove item from world
+- \`move-all-items-region(unit, x, y)\` — Drop all items at position
+- \`take-all-items-region(unit, x, y)\` — Pick up all items at position
+
+### UI / Text
+- \`text-messagebox(args...)\` — Show message box
+- \`text-dialogbox(args...)\` — Open dialog box with options
+- \`text-dialog(unit, id, key, ?useDialogBox)\` — Floating dialog
+- \`menu-show(?fullReset)\` — Show menu
+- \`show-help-tooltip()\` — Show help UI
+- \`game-select-subclass()\` — Open subclass selection
+- \`show-credits-label(frame, region)\` — Show credit text
+
+### Audio
+- \`music-change(name)\` — Change background music
+- \`music-pause()\` — Pause music
+- \`play-sound(path)\` — Play sound effect
+- \`add-intro-sound(sounds...)\` — Set guardian intro sounds
+- \`play-intro-sound()\` — Play guardian intro
+
+### Effects
+- \`add-sfx(path, ?x, ?y, ?region, ?followCamera)\` — Add special effect
+- \`add-special-effect(texture, anim, attach, target, x, y, ...)\` — Add complex effect
+- \`play-animation(unit, anim, ?loop)\` — Play unit animation
+- \`prop-play-animation(prop, anim)\` — Play prop animation
+- \`environment-play-animation(env, anim)\` — Play environment animation
+- \`environment-play-animation-region(anim, region)\` — Animate envs in region
+- \`change-map-particles(name)\` — Change map particles
+
+### Environment / Terrain
+- \`spawn-environment(path, var, x, y)\` — Spawn environment
+- \`add-environment-sfx(path, var, x, y, ...)\` — Environment with particles
+- \`add-environment-sfx-region(path, ?var, region, ...)\` — Env with particles at region
+- \`change-mass-environment(old, new)\` — Replace env type
+- \`region-terrain-animation(anim, region)\` — Animate terrain
+- \`region-terrain-remove(region)\` — Remove terrain
+
+### Portals / Walls
+- \`portal-enable(int, bool)\` — Enable/disable portal
+- \`add-wall(region)\` — Create wall at region
+- \`wall-remove(region)\` — Remove walls in region
+- \`travel-block(?bool)\` — Block map travel
+- \`block-map-teleport(?bool)\` — Block teleportation
+
+### Fog
+- \`apply-map-fog(style)\` — Apply fog of war
+- \`break-map-fog()\` — Remove fog
+- \`fog-toggle(?bool)\` — Toggle fog setting
+
+### Variables / Persistence
+- \`set-global-variable(name, bool)\` — Set global boolean
+- \`set-game-context(context)\` — Set context string
+- \`delete-save()\` — Delete save file
+- \`clear-storage()\` — Clear shared stash
+
+### Skills
+- \`add-skill(unit, skills..., ?hotkey)\` — Add abilities
+- \`remove-skill-all(unit)\` — Remove all abilities
+- \`disable-skill(unit, skills...)\` — Disable specific skills
+- \`remove-skills-hotkey(unit, hotkeys...)\` — Remove by hotkey
+- \`add-passive(unit, passives...)\` — Add passives
+- \`remove-passive-all(unit)\` — Remove all passives
+- \`enable-skill-tree(?bool)\` — Toggle skill tree
+- \`clear-skill-tree(unit)\` — Clear skill choices
+- \`clear-passive-tree(unit)\` — Clear passive choices
+
+### Merchants
+- \`spawn-merchant(path, x, y)\` — Spawn merchant
+- \`merchant-remove(name)\` — Remove merchant
+- \`merchant-remove-all()\` — Remove all merchants
+- \`merchant-update(name)\` — Refresh inventory
+
+### Economy
+- \`set-gold-all-players(int)\` — Set gold amount
+- \`add-gold-all-players(int)\` — Add gold
+- \`set-food(unit, int)\` — Set food stat
+
+### Map Control
+- \`exit()\` — Go to exit map
+- \`erase-world(region)\` — Erase outside region
+- \`minimap-disable()\` — Disable minimap
+- \`toggle-control(?bool)\` — Enable/disable input
+- \`toggle-extra-modes(?bool)\` — Toggle extra modes
+- \`extra-modes-info()\` — Show extra modes info
+- \`check-official-custom-map()\` — Achievement check
+- \`check-campaign-endgame()\` — Endgame achievement
+- \`check-campaign-final()\` — Final achievement
+- \`unit-set-dialog-value(unit, int)\` — Set dialog value
+
+## Execution Notes
+
+- Actions execute **sequentially** in order.
+- If an action returns \`false\` (e.g. \`system-sleep\` while waiting), subsequent actions pause.
+- \`trigger-reset\` resets the entire trigger, allowing it to fire again.`
+  },
+  'scripts': {
+    title: 'Scripts',
+    order: 5,
+    content: `# Scripts
+
+Scripts are chat-like commands that can be executed in-game. They start with the \`/\` prefix and provide a way to interact with the game for debugging, testing, or administrative purposes.
+
+## Usage Format
+
+\`\`\`
+/command parameter1 parameter2 ...
+\`\`\`
+
+## Command Reference
+
+### \`/setExp\` or \`/se\`
+Sets the experience of a specific unit.
+\`\`\`
+/se hero 5000
+\`\`\`
+
+### \`/setGold\` or \`/sg\`
+Sets the gold amount for a specific player.
+\`\`\`
+/sg 0 9999
+\`\`\`
+
+### \`/changeUnit\` or \`/cu\`
+Changes a unit's type while preserving its state.
+\`\`\`
+/cu hero characters/warrior
+\`\`\`
+
+### \`/reloadUnit\` or \`/rlu\`
+Reloads a unit from its original data file.
+\`\`\`
+/rlu hero
+\`\`\`
+
+### \`/resetUnit\` or \`/ru\`
+Resets a unit to its default state.
+\`\`\`
+/ru hero
+\`\`\`
+
+### \`/getPosition\` or \`/gp\`
+Gets the current position of a unit.
+\`\`\`
+/gp hero
+\`\`\`
+
+### \`/showStatistics\` or \`/ss\`
+Shows detailed statistics for a player.
+\`\`\`
+/ss 0
+\`\`\`
+
+### \`/spawnUnit\` or \`/su\`
+Spawns a new unit at the mouse cursor position.
+\`\`\`
+/su characters/enemies/goblin 2 goblin-1 5
+\`\`\`
+
+### \`/spawnItem\` or \`/si\`
+Spawns an item at the mouse cursor position.
+\`\`\`
+/si items/weapons/wooden-sword
+\`\`\`
+
+### \`/changeMap\` or \`/cm\`
+Changes to a different map.
+\`\`\`
+/cm caves-village
+\`\`\`
+
+### \`/show\` or \`/s\`
+Toggles various debug visualizations: \`fps\`, \`vs\` (vertex sight), \`ps\` (polygons sight), \`me\` (map edges), \`fog\`, \`st\` (stats).
+
+### \`/resetAchievements\`
+Resets all achievements.
+
+### \`/!\`
+Executes a copyboard command (debug/development feature).`
+  }
+};
+
+// ================================================================
+//  MARKDOWN RENDERER
+// ================================================================
+
+function renderMarkdown(md) {
+  let html = '';
+  const lines = md.split('\n');
+  let i = 0;
+  let inCodeBlock = false;
+  let codeBuf = [];
+  let codeLang = '';
+  let inTable = false;
+  let tableBuf = [];
+
+  while (i < lines.length) {
+    const line = lines[i];
+    const trim = line.trim();
+
+    // Code block
+    if (trim.startsWith('```')) {
+      if (inCodeBlock) {
+        codeBuf.push(line);
+        const lang = codeBuf[0].slice(3).trim();
+        const code = codeBuf.slice(1, -1).join('\n');
+        html += `<pre><code class="lang-${lang}">${escapeHtml(code)}</code></pre>\n`;
+        codeBuf = [];
+        inCodeBlock = false;
+        i++;
+        continue;
+      } else {
+        inCodeBlock = true;
+        codeBuf = [line];
+        i++;
+        continue;
+      }
+    }
+
+    if (inCodeBlock) {
+      codeBuf.push(line);
+      i++;
+      continue;
+    }
+
+    // Skip empty lines (handled by paragraph logic)
+    if (trim === '') {
+      if (inTable) {
+        html += buildTable(tableBuf);
+        tableBuf = [];
+        inTable = false;
+      }
+      html += '\n'; // preserve spacing
+      i++;
+      continue;
+    }
+
+    // Table row
+    if (trim.startsWith('|') && trim.endsWith('|')) {
+      inTable = true;
+      tableBuf.push(line);
+      i++;
+      continue;
+    }
+
+    if (inTable) {
+      html += buildTable(tableBuf);
+      tableBuf = [];
+      inTable = false;
+    }
+
+    // Horizontal rule
+    if (/^---+\s*$/.test(trim)) {
+      html += '<hr>\n';
+      i++;
+      continue;
+    }
+
+    // Headers
+    const hMatch = trim.match(/^(#{1,3})\s+(.+)/);
+    if (hMatch) {
+      const level = hMatch[1].length;
+      const text = renderInline(hMatch[2]);
+      html += `<h${level}>${text}</h${level}>\n`;
+      i++;
+      continue;
+    }
+
+    // Unordered list
+    if (trim.startsWith('- ') || trim.startsWith('* ')) {
+      let listItems = [];
+      while (i < lines.length) {
+        const li = lines[i].trim();
+        if (li.startsWith('- ') || li.startsWith('* ')) {
+          listItems.push(renderInline(li.slice(2)));
+          i++;
+        } else if (li === '') {
+          break;
+        } else {
+          break;
+        }
+      }
+      html += '<ul>\n' + listItems.map(item => `  <li>${item}</li>\n`).join('') + '</ul>\n';
+      continue;
+    }
+
+    // Regular paragraph
+    let paraLines = [];
+    while (i < lines.length) {
+      const pl = lines[i];
+      if (pl.trim() === '' || pl.trim().startsWith('```') || pl.trim().startsWith('#') || pl.trim().startsWith('- ') || pl.trim().startsWith('* ')) break;
+      if (pl.trim().startsWith('|') && pl.trim().endsWith('|')) break;
+      if (/^---+\s*$/.test(pl.trim())) break;
+      paraLines.push(pl);
+      i++;
+    }
+    if (paraLines.length > 0) {
+      const text = renderInline(paraLines.join(' '));
+      html += `<p>${text}</p>\n`;
+    }
+  }
+
+  if (inCodeBlock && codeBuf.length > 0) {
+    const lang = codeBuf[0].slice(3).trim();
+    const code = codeBuf.slice(1).join('\n').replace(/\n```$/, '').replace(/```$/, '');
+    html += `<pre><code class="lang-${lang}">${escapeHtml(code)}</code></pre>\n`;
+  }
+
+  if (inTable) {
+    html += buildTable(tableBuf);
+  }
+
+  return html;
+}
+
+function buildTable(rows) {
+  const parsed = [];
+  let headerRow = null;
+  for (let r = 0; r < rows.length; r++) {
+    const cells = rows[r].trim().split('|').filter(c => c !== '').map(c => c.trim());
+    if (r > 0 && cells.length > 0 && cells.every(c => /^:?-+:?$/.test(c))) continue; // skip separator
+    if (r === 0) headerRow = cells;
+    else parsed.push(cells);
+  }
+  if (!headerRow) return '';
+  let html = '<table>\n<thead>\n<tr>';
+  for (const h of headerRow) html += `<th>${renderInline(h)}</th>`;
+  html += '</tr>\n</thead>\n<tbody>\n';
+  for (const row of parsed) {
+    html += '<tr>';
+    for (let c = 0; c < headerRow.length; c++) {
+      html += `<td>${renderInline(row[c] || '')}</td>`;
+    }
+    html += '</tr>\n';
+  }
+  html += '</tbody>\n</table>\n';
+  return html;
+}
+
+function renderInline(text) {
+  // Escape HTML first
+  let s = escapeHtml(text);
+  // Code inline: `code`
+  s = s.replace(/\`([^`]+)\`/g, '<code>$1</code>');
+  // Bold: **text**
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  // Links: [text](url)
+  s = s.replace(/\[([^]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+  return s;
+}
+
+// ================================================================
+//  DOCUMENTATION POPUP
+// ================================================================
+
+let docModal = null;
+
+function openDocs(pageKey) {
+  const existing = document.getElementById('docModal');
+  if (existing) existing.remove();
+
+  const sortedPages = Object.entries(DOCS).sort((a, b) => a[1].order - b[1].order);
+
+  docModal = document.createElement('div');
+  docModal.id = 'docModal';
+  docModal.style.cssText = `
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.75);
+    display: flex;
+    font-family: var(--font-family);
+  `;
+
+  const sidebar = document.createElement('div');
+  sidebar.style.cssText = `
+    width: 220px; background: #1e1f1c;
+    border-right: 1px solid #3e3d32;
+    display: flex; flex-direction: column;
+    flex-shrink: 0; overflow: hidden;
+  `;
+
+  const sidebarTitle = document.createElement('div');
+  sidebarTitle.style.cssText = `
+    padding: 14px 16px; font-size: 13px; font-weight: 700;
+    color: var(--accent-pink); border-bottom: 1px solid #3e3d32;
+    display: flex; align-items: center; gap: 8px;
+  `;
+  sidebarTitle.innerHTML = '📖 Documentation';
+  sidebar.appendChild(sidebarTitle);
+
+  const navList = document.createElement('div');
+  navList.style.cssText = `
+    flex: 1; overflow-y: auto; padding: 6px 0;
+  `;
+
+  for (const [key, page] of sortedPages) {
+    const navItem = document.createElement('div');
+    navItem.style.cssText = `
+      padding: 8px 16px; cursor: pointer; font-size: 12px;
+      color: var(--text-primary); transition: background 0.1s;
+      border-left: 3px solid transparent;
+    `;
+    navItem.textContent = page.title;
+    navItem.dataset.key = key;
+    navItem.onmouseenter = () => {
+      if (!navItem.classList.contains('active')) navItem.style.background = 'rgba(255,255,255,0.04)';
+    };
+    navItem.onmouseleave = () => {
+      if (!navItem.classList.contains('active')) navItem.style.background = '';
+    };
+    navItem.onclick = () => setDocPage(key);
+    navList.appendChild(navItem);
+  }
+  sidebar.appendChild(navList);
+
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕';
+  closeBtn.style.cssText = `
+    margin: 8px; padding: 6px 12px;
+    background: #3e3d32; color: #f8f8f2;
+    border: 1px solid #49483e; border-radius: 4px;
+    font-size: 12px; cursor: pointer;
+    transition: background 0.15s;
+  `;
+  closeBtn.onmouseenter = () => closeBtn.style.background = '#49483e';
+  closeBtn.onmouseleave = () => closeBtn.style.background = '#3e3d32';
+  closeBtn.onclick = closeDocs;
+  sidebar.appendChild(closeBtn);
+
+  const contentArea = document.createElement('div');
+  contentArea.style.cssText = `
+    flex: 1; overflow-y: auto; padding: 24px 32px;
+    background: #1b1c18; color: var(--text-primary);
+    font-size: 13px; line-height: 1.7;
+  `;
+  contentArea.id = 'docContent';
+
+  docModal.appendChild(sidebar);
+  docModal.appendChild(contentArea);
+  document.body.appendChild(docModal);
+
+  const target = pageKey || sortedPages[0][0];
+  setDocPage(target);
+
+  // Close on Escape
+  const keyHandler = (e) => {
+    if (e.key === 'Escape') { closeDocs(); document.removeEventListener('keydown', keyHandler); }
+  };
+  document.addEventListener('keydown', keyHandler);
+
+  // Click outside content
+  docModal.addEventListener('click', (e) => {
+    if (e.target === docModal) closeDocs();
+  });
+}
+
+function setDocPage(key) {
+  const page = DOCS[key];
+  if (!page) return;
+
+  const content = document.getElementById('docContent');
+  if (!content) return;
+
+  content.innerHTML = renderMarkdown(page.content);
+
+  // Update active nav
+  const navItems = docModal.querySelectorAll('[data-key]');
+  navItems.forEach(item => {
+    if (item.dataset.key === key) {
+      item.style.background = 'rgba(249,38,114,0.15)';
+      item.style.borderLeftColor = 'var(--accent-pink)';
+      item.classList.add('active');
+    } else {
+      item.style.background = '';
+      item.style.borderLeftColor = 'transparent';
+      item.classList.remove('active');
+    }
+  });
+
+  // Scroll to top
+  content.scrollTop = 0;
+}
+
+function closeDocs() {
+  if (docModal) {
+    docModal.remove();
+    docModal = null;
+  }
+}
+
+const NAMED_ARGS_EVENT = ['unit:', 'range:', 'id:', 'text:'];
+const NAMED_ARGS_CONDITION = ['unit:', 'float:', 'int:', 'text:'];
+const NAMED_ARGS_ACTION = ['unit:', 'float:', 'int:', 'text:', 'active:', 'single:'];
+
+// All named args union (unique)
+const ALL_NAMED_ARGS = [...new Set([...NAMED_ARGS_EVENT, ...NAMED_ARGS_CONDITION, ...NAMED_ARGS_ACTION])];
+
+// ================================================================
+//  AUTOCOMPLETE ENGINE
+// ================================================================
+
+let autocompleteState = {
+  active: false,
+  items: [],
+  selectedIndex: 0,
+  context: null
+};
+
+function getCurrentWord(text) {
+  const match = text.match(/[a-zA-Z0-9_-]+$/);
+  return match ? match[0] : '';
+}
+
+function getCompletionContext(text, cursorPos) {
+  const beforeCursor = text.slice(0, cursorPos);
+  const lines = beforeCursor.split('\n');
+  const currentLine = lines[lines.length - 1];
+  
+  // Get full current line
+  const restOfText = text.slice(beforeCursor.lastIndexOf('\n') + 1);
+  const fullLineEnd = restOfText.indexOf('\n');
+  const fullLine = fullLineEnd === -1 ? restOfText : restOfText.slice(0, fullLineEnd);
+  
+  const trimmedLine = currentLine.trim();
+  
+  // ── Inside parentheses (function args) ──
+  let parenDepth = 0;
+  let lastOpenParen = -1;
+  for (let i = 0; i < currentLine.length; i++) {
+    if (currentLine[i] === '(') { parenDepth++; lastOpenParen = i; }
+    if (currentLine[i] === ')') parenDepth--;
+  }
+  
+  if (parenDepth > 0 && lastOpenParen >= 0) {
+    const beforeParen = currentLine.slice(0, lastOpenParen).trim();
+    const funcName = beforeParen.split(/\s+/).pop() || '';
+    const afterLastParen = currentLine.slice(lastOpenParen + 1);
+    const currentWord = getCurrentWord(afterLastParen);
+    
+    if (EVENT_TYPES.has(funcName)) {
+      return { type: 'event-args', prefix: currentWord, items: NAMED_ARGS_EVENT };
+    }
+    if (CONDITION_TYPES.has(funcName)) {
+      return { type: 'condition-args', prefix: currentWord, items: NAMED_ARGS_CONDITION };
+    }
+    if (ACTION_TYPES.has(funcName)) {
+      return { type: 'action-args', prefix: currentWord, items: NAMED_ARGS_ACTION };
+    }
+    return { type: 'args', prefix: currentWord, items: ALL_NAMED_ARGS };
+  }
+  
+  // ── Meta key (@ prefix) ──
+  if (trimmedLine.startsWith('@')) {
+    const afterAt = trimmedLine.slice(1);
+    const word = afterAt.match(/^[a-zA-Z_-]*/)?.[0] || '';
+    return { type: 'meta', prefix: word, items: META_KEYS };
+  }
+  
+  // ── Get current word and text before it ──
+  const currentWord = getCurrentWord(beforeCursor);
+  if (!currentWord && !trimmedLine.endsWith(' ') && !trimmedLine.endsWith('@')) {
+    return null;
+  }
+  
+  const textBeforeWord = beforeCursor.slice(0, beforeCursor.length - currentWord.length).trimEnd();
+  
+  // After "on " → event types (also if just typed "on" and a space)
+  if (/\bon$/.test(textBeforeWord) && /^\s*on\s+/.test(currentLine)) {
+    return { type: 'event', prefix: currentWord, items: [...EVENT_TYPES] };
+  }
+  
+  // After "if", "and", "or" → condition types
+  if (/\b(if|and|or)$/.test(textBeforeWord)) {
+    return { type: 'condition', prefix: currentWord, items: [...CONDITION_TYPES] };
+  }
+  
+  // In action section (indented line, after then:)
+  const leadingSpace = fullLine.match(/^(\s*)/)[1];
+  const trimmedFull = fullLine.trim();
+  if (leadingSpace.length >= 4 && !trimmedFull.startsWith('//') && !trimmedFull.startsWith('@') &&
+      !/^if\s/.test(trimmedFull) && trimmedFull !== 'then:' && !trimmedFull.startsWith('then:')) {
+    const lineBeforeCursor = currentLine;
+    const wordOnLine = lineBeforeCursor.match(/[a-zA-Z_-][a-zA-Z0-9_-]*$/);
+    if (wordOnLine) {
+      return { type: 'action', prefix: currentWord, items: [...ACTION_TYPES] };
+    }
+  }
+  
+  return null;
+}
+
+function filterAutocompleteItems(items, prefix) {
+  if (!prefix) return [...items].sort();
+  const lower = prefix.toLowerCase();
+  return items.filter(item => item.toLowerCase().startsWith(lower)).sort();
+}
+
+function getTypeLabel(type) {
+  const labels = {
+    'event': ['event', 'EVENT'],
+    'condition': ['condition', 'COND'],
+    'action': ['action', 'ACT'],
+    'meta': ['meta', 'META'],
+    'event-args': ['arg', 'ARG'],
+    'condition-args': ['arg', 'ARG'],
+    'action-args': ['arg', 'ARG'],
+    'args': ['arg', 'ARG']
+  };
+  return labels[type] || ['', ''];
+}
+
+// ================================================================
+//  SYNTAX HIGHLIGHTER (single-pass tokenizer — no regex overlaps)
+// ================================================================
+
+function highlightLine(line) {
+  // Returns HTML for a single line. No lookbehind used.
+  const html = [];
+
+  // Check for comment
+  const commentIdx = line.indexOf('//');
+  let codePart = line;
+  let commentPart = '';
+  if (commentIdx !== -1) {
+    codePart = line.slice(0, commentIdx);
+    commentPart = line.slice(commentIdx);
+  }
+
+  // Tokenize codePart
+  let i = 0;
+  const tokens = [];
+
+  while (i < codePart.length) {
+    // String literal
+    if (codePart[i] === '"') {
+      let j = i + 1;
+      while (j < codePart.length && codePart[j] !== '"') {
+        if (codePart[j] === '\\') j++;
+        j++;
+      }
+      if (j < codePart.length) j++; // closing quote
+      tokens.push({ type: 'string', text: codePart.slice(i, j) });
+      i = j;
+      continue;
+    }
+
+    // Number
+    if (/[0-9]/.test(codePart[i]) && (i === 0 || /[\s,()]/.test(codePart[i-1]))) {
+      let j = i;
+      let hasDot = false;
+      while (j < codePart.length && /[0-9.]/.test(codePart[j])) {
+        if (codePart[j] === '.') hasDot = true;
+        j++;
+      }
+      tokens.push({ type: 'number', text: codePart.slice(i, j) });
+      i = j;
+      continue;
+    }
+
+    // Named key (word followed by colon) — before generic word detection
+    if (/[a-zA-Z_-]/.test(codePart[i])) {
+      let j = i;
+      while (j < codePart.length && /[a-zA-Z_-]/.test(codePart[j])) j++;
+      if (j < codePart.length && codePart[j] === ':') {
+        const word = codePart.slice(i, j);
+        if (word !== 'then') {
+          j++; // include colon
+          tokens.push({ type: 'named-key', text: codePart.slice(i, j) });
+          i = j;
+          continue;
+        }
+      }
+    }
+
+    // Word (identifier)
+    if (/[a-zA-Z_]/.test(codePart[i])) {
+      let j = i;
+      while (j < codePart.length && /[a-zA-Z0-9_-]/.test(codePart[j])) j++;
+      const word = codePart.slice(i, j);
+      const prevChar = i > 0 ? codePart[i-1] : ' ';
+      const nextChar = j < codePart.length ? codePart[j] : ' ';
+
+      // Determine word type based on context
+      const wordType = classifyWord(word, prevChar, nextChar, i, codePart);
+      tokens.push({ type: wordType, text: word });
+      i = j;
+      continue;
+    }
+
+    // Boolean
+    if (codePart.slice(i, i+4) === 'true' && !/[a-zA-Z0-9_-]/.test(codePart[i+4]||'')) {
+      tokens.push({ type: 'boolean', text: 'true' });
+      i += 4;
+      continue;
+    }
+    if (codePart.slice(i, i+5) === 'false' && !/[a-zA-Z0-9_-]/.test(codePart[i+5]||'')) {
+      tokens.push({ type: 'boolean', text: 'false' });
+      i += 5;
+      continue;
+    }
+
+    // Operators
+    if (codePart[i] === '(' || codePart[i] === ')' || codePart[i] === ',' || codePart[i] === ':') {
+      tokens.push({ type: 'punctuation', text: codePart[i] });
+      i++;
+      continue;
+    }
+
+    // Other chars
+    tokens.push({ type: 'plain', text: codePart[i] });
+    i++;
+  }
+
+  // Build HTML
+  for (const t of tokens) {
+    const cls = t.type !== 'plain' ? ` class="${t.type}"` : '';
+    html.push(`<span${cls}>${escapeHtml(t.text)}</span>`);
+  }
+
+  if (commentPart) {
+    html.push(`<span class="comment">${escapeHtml(commentPart)}</span>`);
+  }
+
+  return html.join('');
+}
+
+function classifyWord(word, prevChar, nextChar, idx, fullLine) {
+  // Metadata key
+  if (prevChar === '@') return 'meta-key';
+
+  // Keyword 'on', 'if', 'then'
+  if (word === 'on' || word === 'if' || word === 'then') return 'keyword';
+
+  // 'and', 'or'
+  if (word === 'and' || word === 'or' || word === 'not') return 'operator';
+
+  // Event type: after 'on'
+  if (word !== 'on' && prevChar === ' ' && /on\s*$/.test(fullLine.slice(0, idx).trimEnd()) &&
+      EVENT_TYPES.has(word)) return 'event-type';
+
+  // Condition type: after 'if', 'and', or 'or' and followed by '('
+  if (CONDITION_TYPES.has(word) && nextChar === '(') {
+    const before = fullLine.slice(0, idx).trimEnd();
+    if (/if$|and$|or$/.test(before) || /\(\s*$/.test(before)) return 'condition-type';
+  }
+
+  // Action type: at the start of a line (indented) and followed by '('
+  if (ACTION_TYPES.has(word) && nextChar === '(') {
+    const leading = fullLine.slice(0, idx);
+    if (leading.trim() === '' || leading.trim() === 'then:') return 'action-type';
+  }
+
+  return 'plain';
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function highlightText(text) {
+  const lines = text.split('\n');
+  const out = lines.map(line => highlightLine(line));
+  return out.join('\n');
+}
+
+// ================================================================
+//  GUTTER
+// ================================================================
+
+function updateGutter(text) {
+  const lines = text.split('\n');
+  gutter.innerHTML = lines.map((_, i) => {
+    const lineNum = i + 1;
+    const errs = state.compileErrors[lineNum];
+    let cls = 'gutter-line';
+    let marker = '';
+    if (errs && errs.length > 0) {
+      const hasError = errs.some(e => e.type === 'error');
+      cls += hasError ? ' has-error' : ' has-warning';
+      marker = hasError ? '✗' : '⚠';
+    }
+    return `<div class="${cls}" data-line="${lineNum}">${marker}${i + 1}</div>`;
+  }).join('');
+}
+
+// ================================================================
+//  INDENT GUIDES
+// ================================================================
+
+function updateIndentGuides(text) {
+  const lines = text.split('\n');
+  const tabSize = 4;
+  let maxIndent = 0;
+  for (const line of lines) {
+    const indent = line.search(/\S/);
+    if (indent > 0) {
+      const levels = Math.floor(indent / tabSize);
+      if (levels > maxIndent) maxIndent = levels;
+    }
+  }
+
+  if (maxIndent === 0) {
+    indentGuides.innerHTML = '';
+    return;
+  }
+
+  const approxCharWidth = 8.4; // approximate for monospace
+  let html = '';
+  for (let level = 1; level <= maxIndent; level++) {
+    const x = (level * tabSize * approxCharWidth) + 12;
+    html += `<div style="position:absolute;top:0;left:${x}px;width:1px;height:100%;background:var(--indent-guide);pointer-events:none;z-index:1"></div>`;
+  }
+  indentGuides.innerHTML = html;
+}
+
+// ================================================================
+//  PARSER — Pseudo-language → IR
+// ================================================================
+
+function parseArgs(str) {
+  const args = [];
+  let i = 0;
+  let current = '';
+  let inString = false;
+  let depth = 0;
+
+  function pushArg() {
+    const trimmed = current.trim();
+    if (trimmed === '') return;
+    const namedMatch = trimmed.match(/^([a-zA-Z_-]+):\s*(.*)/);
+    if (namedMatch) {
+      args.push({ type: 'named', key: namedMatch[1], value: parseValue(namedMatch[2].trim()) });
+    } else {
+      args.push({ type: 'value', value: parseValue(trimmed) });
+    }
+    current = '';
+  }
+
+  while (i < str.length) {
+    const ch = str[i];
+    if (ch === '"' && (i === 0 || str[i-1] !== '\\')) {
+      inString = !inString;
+      current += ch;
+    } else if (!inString && ch === '(') {
+      depth++;
+      current += ch;
+    } else if (!inString && ch === ')') {
+      depth--;
+      current += ch;
+    } else if (!inString && ch === ',' && depth === 0) {
+      pushArg();
+    } else {
+      current += ch;
+    }
+    i++;
+  }
+  if (current.trim()) pushArg();
+  return args;
+}
+
+function parseValue(str) {
+  str = str.trim();
+  if ((str.startsWith('"') && str.endsWith('"')) || (str.startsWith("'") && str.endsWith("'"))) {
+    return { type: 'string', value: str.slice(1, -1) };
+  }
+  if (str === 'true') return { type: 'boolean', value: true };
+  if (str === 'false') return { type: 'boolean', value: false };
+  if (/^-?\d+$/.test(str)) return { type: 'integer', value: parseInt(str, 10) };
+  if (/^-?\d+\.\d+$/.test(str)) return { type: 'float', value: parseFloat(str) };
+  return { type: 'string', value: str };
+}
+
+function parseEventArgs(args) {
+  const obj = {};
+  for (const arg of args) {
+    if (arg.type === 'named') {
+      switch (arg.key) {
+        case 'unit': case 'unitName': obj.unitName = arg.value.value; break;
+        case 'range': case 'float': obj.floatValue = arg.value.value; break;
+        case 'id': case 'int': case 'integer': obj.integerValue = arg.value.value; break;
+        case 'text': obj.text = arg.value.value; break;
+        default:
+          if (arg.value.type === 'string' && !obj.unitName) obj.unitName = arg.value.value;
+          else if ((arg.value.type === 'float' || arg.value.type === 'integer') && !obj.floatValue) obj.floatValue = arg.value.value;
+          break;
+      }
+    } else {
+      if (arg.value.type === 'string' && !obj.unitName) obj.unitName = arg.value.value;
+      else if ((arg.value.type === 'float' || arg.value.type === 'integer') && !obj.floatValue) obj.floatValue = arg.value.value;
+    }
+  }
+  return obj;
+}
+
+function parseConditionArgs(args) {
+  const obj = { strings: [], integers: [], floats: [], booleans: [] };
+  for (const arg of args) {
+    if (arg.type === 'named') {
+      switch (arg.key) {
+        case 'unit': case 'unitName': obj.unitName = arg.value.value; break;
+        case 'float': obj.floatValue = arg.value.value; break;
+        case 'int': case 'integer': obj.integerValue = arg.value.value; break;
+        case 'text': obj.text = arg.value.value; break;
+        default:
+          if (arg.value.type === 'string') obj.strings.push({ value: arg.value.value });
+          else if (arg.value.type === 'integer') obj.integers.push({ value: arg.value.value });
+          else if (arg.value.type === 'float') obj.floats.push({ value: arg.value.value });
+          else if (arg.value.type === 'boolean') obj.booleans.push({ value: arg.value.value });
+          break;
+      }
+    } else {
+      if (arg.value.type === 'string') obj.strings.push({ value: arg.value.value });
+      else if (arg.value.type === 'integer') obj.integers.push({ value: arg.value.value });
+      else if (arg.value.type === 'float') obj.floats.push({ value: arg.value.value });
+      else if (arg.value.type === 'boolean') obj.booleans.push({ value: arg.value.value });
+    }
+  }
+  return obj;
+}
+
+function parseActionArgs(args) {
+  const obj = { strings: [], integers: [], floats: [], booleans: [], activated: true, singleThread: true };
+  for (const arg of args) {
+    if (arg.type === 'named') {
+      switch (arg.key) {
+        case 'unit': case 'unitName': obj.unitName = arg.value.value; break;
+        case 'float': obj.floatValue = arg.value.value; break;
+        case 'int': case 'integer': obj.integerValue = arg.value.value; break;
+        case 'text': obj.text = arg.value.value; break;
+        case 'active': case 'activated': obj.activated = arg.value.value; break;
+        case 'single': obj.singleThread = arg.value.value; break;
+        default:
+          if (arg.value.type === 'string') obj.strings.push({ value: arg.value.value });
+          else if (arg.value.type === 'integer') obj.integers.push({ value: arg.value.value });
+          else if (arg.value.type === 'float') obj.floats.push({ value: arg.value.value });
+          else if (arg.value.type === 'boolean') obj.booleans.push({ value: arg.value.value });
+          break;
+      }
+    } else {
+      if (arg.value.type === 'string') obj.strings.push({ value: arg.value.value });
+      else if (arg.value.type === 'integer') obj.integers.push({ value: arg.value.value });
+      else if (arg.value.type === 'float') obj.floats.push({ value: arg.value.value });
+      else if (arg.value.type === 'boolean') obj.booleans.push({ value: arg.value.value });
+    }
+  }
+  return obj;
+}
+
+function parseFullScript(text) {
+  const lines = text.split('\n');
+  const triggers = [];
+  const metadataRaw = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const trimmed = lines[i].trim();
+
+    if (trimmed === '' || trimmed.startsWith('//')) {
+      i++;
+      continue;
+    }
+
+    if (trimmed.startsWith('@')) {
+      metadataRaw.push({ raw: lines[i], index: i });
+      i++;
+      // Collect continuation lines (indented or list items)
+      while (i < lines.length) {
+        const nextTrimmed = lines[i].trim();
+        if (nextTrimmed === '' || nextTrimmed.startsWith('//')) { i++; continue; }
+        if (nextTrimmed.startsWith('@') || nextTrimmed.startsWith('on ')) break;
+        metadataRaw.push({ raw: lines[i], index: i });
+        i++;
+      }
+      continue;
+    }
+
+    if (trimmed.startsWith('on ')) {
+      const block = parseTriggerBlock(lines, i);
+      if (block) {
+        triggers.push(block);
+        i = block.lineEnd;
+      } else { i++; }
+    } else {
+      i++;
+    }
+  }
+
+  return { triggers, metadataRaw };
+}
+
+function parseTriggerBlock(lines, startIdx) {
+  const block = {
+    events: [],
+    conditions: [],
+    then: [],
+    conditionGroup: 'and',
+    lineStart: startIdx,
+    lineEnd: startIdx
+  };
+  let i = startIdx;
+
+  // Parse "on <event-type>(<args>)"
+  const onLine = lines[i].trim();
+  const onMatch = onLine.match(/^on\s+([a-zA-Z_-]+)\s*(?:\(([^)]*)\))?\s*(?:\/\/.*)?$/);
+  if (!onMatch) return null;
+
+  const eventType = onMatch[1];
+  const eventArgsStr = onMatch[2] || '';
+  const eventObj = { event: eventType, ...parseEventArgs(parseArgs(eventArgsStr)) };
+  block.events.push(eventObj);
+  i++;
+  block.lineEnd = i;
+
+  // Parse conditions
+  while (i < lines.length) {
+    const trimmed = lines[i].trim();
+    if (trimmed === '' || trimmed.startsWith('//')) { i++; continue; }
+
+    if (trimmed.startsWith('if ')) {
+      const ifContent = trimmed.slice(3).trim();
+      // Split by ' and ' or ' or ' (preserving separators)
+      const parts = ifContent.split(/\s+(and|or)\s+/);
+      for (let p = 0; p < parts.length; p++) {
+        const part = parts[p].trim();
+        if (part === 'and' || part === 'or') {
+          block.conditionGroup = part;
+          continue;
+        }
+        const condMatch = part.match(/^([a-zA-Z_-]+)\s*(?:\(([^)]*)\))?\s*(?:\/\/.*)?$/);
+        if (condMatch) {
+          const condType = condMatch[1];
+          const condArgsStr = condMatch[2] || '';
+          const condObj = { condition: condType, ...parseConditionArgs(parseArgs(condArgsStr)) };
+          block.conditions.push(condObj);
+        }
+      }
+      i++;
+      continue;
+    }
+
+    if (trimmed === 'then:' || trimmed.startsWith('then:')) { i++; break; }
+    if (trimmed.startsWith('@') || trimmed.startsWith('on ')) break;
+    if (!trimmed.startsWith('if ')) break; // unknown line type
+    i++;
+  }
+
+  // Skip blanks after "then:"
+  while (i < lines.length && lines[i].trim() === '') i++;
+
+  // Parse actions
+  while (i < lines.length) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    if (trimmed === '' || trimmed.startsWith('//')) { i++; continue; }
+
+    const indent = line.search(/\S/);
+    if (indent < 4 || trimmed.startsWith('@') || trimmed.startsWith('on ') ||
+        trimmed.startsWith('if ') || trimmed === 'then:') break;
+
+    const actionMatch = trimmed.match(/^([a-zA-Z_-]+)\s*(?:\(([^)]*)\))?\s*(?:\/\/.*)?$/);
+    if (!actionMatch) { i++; continue; }
+
+    const actionType = actionMatch[1];
+    const actionArgsStr = actionMatch[2] || '';
+    const actionObj = { action: actionType, ...parseActionArgs(parseArgs(actionArgsStr)) };
+    block.then.push(actionObj);
+    i++;
+  }
+
+  block.lineEnd = i;
+  return block;
+}
+
+// ================================================================
+//  JSON → Pseudo-language Generator
+// ================================================================
+
+function jsonToPseudo(jsonObj) {
+  const lines = [];
+  let first = true;
+
+  const fmt = v => {
+    if (typeof v === 'string') return `"${v}"`;
+    if (typeof v === 'boolean') return v ? 'true' : 'false';
+    return String(v);
+  };
+
+  const fmtArgs = (obj, specialFields) => {
+    const parts = [];
+    for (const [k, v] of Object.entries(specialFields)) {
+      if (v !== undefined && v !== null && v !== '' && v !== 0) {
+        parts.push(`${k}: ${fmt(v)}`);
+      }
+    }
+    if (obj.strings) obj.strings.forEach(s => parts.push(fmt(s.value)));
+    if (obj.integers) obj.integers.forEach(n => parts.push(fmt(n.value)));
+    if (obj.floats) obj.floats.forEach(f => parts.push(fmt(f.value)));
+    if (obj.booleans) obj.booleans.forEach(b => parts.push(fmt(b.value)));
+    return parts.join(', ');
+  };
+
+  const fmtEventArgs = evt => fmtArgs(evt, {
+    unit: evt.unitName || undefined,
+    range: evt.floatValue || undefined,
+    id: evt.integerValue || undefined,
+    text: evt.text || undefined
+  });
+
+  const fmtConditionArgs = cond => fmtArgs(cond, {
+    unit: cond.unitName || undefined,
+    float: cond.floatValue || undefined,
+    int: cond.integerValue || undefined,
+    text: cond.text || undefined
+  });
+
+  const fmtActionArgs = action => fmtArgs(action, {
+    unit: action.unitName || undefined,
+    float: action.floatValue || undefined,
+    int: action.integerValue || undefined,
+    text: action.text || undefined,
+    active: action.activated === false ? false : undefined,
+    single: action.singleThread === false ? false : undefined
+  });
+
+  // ── Trigger blocks ──
+  if (jsonObj.trigger && Array.isArray(jsonObj.trigger)) {
+    for (const trig of jsonObj.trigger) {
+      if (!first) lines.push('');
+      first = false;
+
+      for (const evt of (trig.events || [])) {
+        const args = fmtEventArgs(evt);
+        lines.push(args ? `on ${evt.event}(${args})` : `on ${evt.event}`);
+      }
+
+      if (trig.conditions && trig.conditions.length > 0) {
+        const condStrs = trig.conditions.map(c => {
+          const args = fmtConditionArgs(c);
+          return args ? `${c.condition}(${args})` : c.condition;
+        });
+        let groupSep = ' and ';
+        for (const c of trig.conditions) {
+          if (c.conditionGroup === 'or') { groupSep = ' or '; break; }
+        }
+        lines.push(`    if ${condStrs.join(groupSep)}`);
+      }
+
+      if (trig.then && trig.then.length > 0) {
+        lines.push('        then:');
+        for (const action of trig.then) {
+          const args = fmtActionArgs(action);
+          lines.push(`            ${action.action}(${args})`);
+        }
+      }
+    }
+  }
+
+  // ── Metadata ──
+  const knownMeta = [
+    'item-drop', 'item-drop-list', 'procedural', 'procedural-list',
+    'procedural-room-size', 'procedural-exit-door', 'unit-spawn-range',
+    'unit-spawn-limit', 'unit-spawn', 'merchant-spawn-chance', 'merchant-spawn',
+    'exit', 'special-exits-chance', 'special-exits',
+    'list-items-spawn',
+    'list-food-spawn',
+    'environments-drop', 'environments-drop-hit',
+    'list-chests-spawn',
+    'list-shrines-spawn',
+    'musics'
+  ];
+
+  for (const key of knownMeta) {
+    if (!(key in jsonObj)) continue;
+    const val = jsonObj[key];
+    if (!first) lines.push('');
+    first = false;
+
+    if (Array.isArray(val)) {
+      if (val.length === 0) {
+        lines.push('@' + key + ':');
+      } else {
+        // Check if all items are simple { value: ... } objects
+        const allSimpleValues = val.every(item =>
+          typeof item === 'object' && item !== null && Object.keys(item).length === 1 && 'value' in item
+        );
+
+        if (allSimpleValues) {
+          const items = val.map(item => fmt(item.value));
+          lines.push(`@${key}:[${items.join(',')}]`);
+        } else {
+          // Complex objects: use inline JSON (no dashes)
+          lines.push(`@${key}: ${JSON.stringify(val)}`);
+        }
+      }
+    } else if (typeof val === 'boolean') {
+      lines.push(`@${key}: ${val}`);
+    } else if (typeof val === 'number') {
+      lines.push(`@${key}: ${val}`);
+    } else if (typeof val === 'string') {
+      lines.push(`@${key}: ${fmt(val)}`);
+    } else if (typeof val === 'object' && val !== null) {
+      lines.push('@' + key + ':');
+      for (const [k, v] of Object.entries(val)) {
+        lines.push(`    ${k}: ${fmt(v)}`);
+      }
+    }
+  }
+
+  // Remaining fields
+  for (const [key, val] of Object.entries(jsonObj)) {
+    if (key === 'trigger' || knownMeta.includes(key)) continue;
+    if (!first) lines.push('');
+    first = false;
+
+    if (typeof val === 'boolean') lines.push(`@${key}: ${val}`);
+    else if (typeof val === 'number') lines.push(`@${key}: ${val}`);
+    else if (typeof val === 'string') lines.push(`@${key}: ${fmt(val)}`);
+    else if (Array.isArray(val)) {
+      const allSimpleValues = val.every(item =>
+        typeof item === 'object' && item !== null && Object.keys(item).length === 1 && 'value' in item
+      );
+      if (allSimpleValues) {
+        const items = val.map(item => fmt(item.value));
+        lines.push(`@${key}:[${items.join(',')}]`);
+      } else {
+        lines.push(`@${key}: ${JSON.stringify(val)}`);
+      }
+    }
+    else lines.push(`@${key}: ${JSON.stringify(val)}`);
+  }
+
+  return lines.join('\n');
+}
+
+// ================================================================
+//  Pseudo-language → JSON Generator
+// ================================================================
+
+function pseudoToJson(text) {
+  const parsed = parseFullScript(text);
+  const result = { trigger: [], 'item-drop': [], 'item-drop-list': [] };
+
+  // Triggers
+  for (const block of parsed.triggers) {
+    const trig = {};
+
+    trig.events = block.events.map(evt => {
+      const e = { event: evt.event };
+      if (evt.floatValue !== undefined && evt.floatValue !== null) e.floatValue = evt.floatValue;
+      if (evt.integerValue !== undefined && evt.integerValue !== null) e.integerValue = evt.integerValue;
+      if (evt.unitName) e.unitName = evt.unitName;
+      if (evt.text) e.text = evt.text;
+      return e;
+    });
+
+    if (block.conditions.length > 0) {
+      trig.conditions = block.conditions.map(cond => {
+        const c = { condition: cond.condition };
+        if (cond.strings && cond.strings.length) c.strings = cond.strings;
+        if (cond.integers && cond.integers.length) c.integers = cond.integers;
+        if (cond.floats && cond.floats.length) c.floats = cond.floats;
+        if (cond.booleans && cond.booleans.length) c.booleans = cond.booleans;
+        if (cond.integerValue !== undefined && cond.integerValue !== null && cond.integerValue !== 0) c.integerValue = cond.integerValue;
+        if (cond.floatValue !== undefined && cond.floatValue !== null && cond.floatValue !== 0) c.floatValue = cond.floatValue;
+        if (cond.unitName) c.unitName = cond.unitName;
+        if (cond.text) c.text = cond.text;
+        if (cond.conditionGroup === 'or') c.conditionGroup = 'or';
+        return c;
+      });
+    }
+
+    if (block.then.length > 0) {
+      trig.then = block.then.map(action => {
+        const a = { action: action.action };
+        if (action.strings && action.strings.length) a.strings = action.strings;
+        if (action.integers && action.integers.length) a.integers = action.integers;
+        if (action.floats && action.floats.length) a.floats = action.floats;
+        if (action.booleans && action.booleans.length) a.booleans = action.booleans;
+        if (action.floatValue !== undefined && action.floatValue !== null) a.floatValue = action.floatValue;
+        if (action.integerValue !== undefined && action.integerValue !== null) a.integerValue = action.integerValue;
+        if (action.unitName) a.unitName = action.unitName;
+        if (action.text) a.text = action.text;
+        if (action.activated === false) a.activated = false;
+        return a;
+      });
+    }
+
+    result.trigger.push(trig);
+  }
+
+  // ── Metadata parsing ──
+  const metaKeys = [
+    'item-drop', 'item-drop-list', 'procedural', 'procedural-list',
+    'procedural-room-size', 'procedural-exit-door', 'unit-spawn-range',
+    'unit-spawn-limit', 'unit-spawn', 'merchant-spawn-chance', 'merchant-spawn',
+    'exit', 'special-exits-chance', 'special-exits',
+    'list-items-spawn',
+    'list-food-spawn',
+    'environments-drop', 'environments-drop-hit',
+    'list-chests-spawn',
+    'list-shrines-spawn',
+    'musics'
+  ];
+
+  const lines = text.split('\n');
+  let currentMetaKey = null;
+  let metaItems = [];
+  let currentObj = null;
+
+  function flushMeta() {
+    if (!currentMetaKey) return;
+    if (!metaKeys.includes(currentMetaKey)) return;
+    if (currentObj) metaItems.push(currentObj);
+    currentObj = null;
+    if (currentMetaKey === 'procedural') {
+      if (metaItems.length === 1 && typeof metaItems[0] === 'boolean') result.procedural = metaItems[0];
+    } else if (currentMetaKey === 'procedural-room-size' || currentMetaKey === 'unit-spawn-range' ||
+               currentMetaKey === 'unit-spawn-limit' || currentMetaKey === 'merchant-spawn-chance' ||
+               currentMetaKey === 'special-exits-chance') {
+      if (metaItems.length >= 1 && typeof metaItems[0] === 'number') result[currentMetaKey] = metaItems[0];
+    } else if (currentMetaKey === 'procedural-list' || currentMetaKey === 'procedural-exit-door' || currentMetaKey === 'exit') {
+      if (metaItems.length >= 1 && typeof metaItems[0] === 'string') result[currentMetaKey] = metaItems[0];
+    } else {
+      result[currentMetaKey] = metaItems;
+    }
+    metaItems = [];
+  }
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('@')) {
+      flushMeta();
+      currentMetaKey = null;
+      const colonIdx = trimmed.indexOf(':');
+      if (colonIdx === -1) continue;
+      const key = trimmed.slice(1, colonIdx).trim();
+      const valueStr = trimmed.slice(colonIdx + 1).trim();
+
+      if (metaKeys.includes(key)) {
+        currentMetaKey = key;
+        metaItems = [];
+
+        if (valueStr === 'true') { metaItems.push(true); }
+        else if (valueStr === 'false') { metaItems.push(false); }
+        else if (/^-?\d+\.?\d*$/.test(valueStr)) { metaItems.push(parseFloat(valueStr)); }
+        else if (valueStr.startsWith('"') && valueStr.endsWith('"')) { metaItems.push(valueStr.slice(1, -1)); }
+        else if (valueStr.startsWith('[') && valueStr.endsWith(']')) {
+          if (valueStr.includes('{')) {
+            // Complex nested objects — use JSON.parse
+            try {
+              const parsed = JSON.parse(valueStr);
+              if (Array.isArray(parsed)) metaItems = parsed;
+            } catch {
+              // fallback: ignore parse failure
+            }
+          } else {
+            // Simple values — comma-split to preserve {value: ...} wrapping
+            const inner = valueStr.slice(1, -1);
+            if (inner.trim()) {
+              metaItems = inner.split(',').map(x => {
+                const sv = parseSimpleValue(x.trim());
+                return typeof sv === 'object' ? sv : { value: sv };
+              });
+            }
+          }
+        }
+
+        currentObj = null;
+      }
+    } else if (trimmed.startsWith('- ') && currentMetaKey) {
+      if (currentObj) metaItems.push(currentObj);
+      currentObj = {};
+      const afterDash = trimmed.slice(2).trim();
+      if (afterDash && !afterDash.includes(':')) {
+        metaItems.push(parseSimpleValue(afterDash));
+        currentObj = null;
+      }
+    } else if (currentObj !== null && trimmed.includes(':')) {
+      const colonIdx = trimmed.indexOf(':');
+      const k = trimmed.slice(0, colonIdx).trim();
+      let vStr = trimmed.slice(colonIdx + 1).trim();
+
+      if (vStr.startsWith('[') && vStr.endsWith(']')) {
+        const inner = vStr.slice(1, -1);
+        currentObj[k] = inner.split(',').map(x => {
+          const sv = parseSimpleValue(x.trim());
+          return typeof sv === 'object' ? sv : { value: sv };
+        });
+      } else {
+        currentObj[k] = parseSimpleValue(vStr);
+      }
+    } else if (currentMetaKey && trimmed !== '' && !trimmed.startsWith('//') && currentObj === null) {
+      // Line continuation
+      if (!trimmed.startsWith('-')) {
+        const sv = parseSimpleValue(trimmed);
+        metaItems.push(sv);
+      }
+    }
+  }
+  flushMeta();
+
+  // Unknown metadata — try to preserve raw text
+  for (const { raw } of parsed.metadataRaw) {
+    const trimmed = raw.trim();
+    if (!trimmed.startsWith('@')) continue;
+    const colonIdx = trimmed.indexOf(':');
+    if (colonIdx === -1) continue;
+    const key = trimmed.slice(1, colonIdx).trim();
+    if (key in result) continue; // already handled
+    if (key === 'trigger') continue;
+    const valueStr = trimmed.slice(colonIdx + 1).trim();
+
+    if (valueStr === 'true') result[key] = true;
+    else if (valueStr === 'false') result[key] = false;
+    else if (/^-?\d+\.?\d*$/.test(valueStr)) result[key] = parseFloat(valueStr);
+    else if (valueStr.startsWith('"') && valueStr.endsWith('"')) result[key] = valueStr.slice(1, -1);
+    else if ((valueStr.startsWith('[') && valueStr.endsWith(']')) || (valueStr.startsWith('{') && valueStr.endsWith('}'))) {
+      try {
+        const parsed = JSON.parse(valueStr);
+        result[key] = parsed;
+      } catch {
+        result[key] = valueStr;
+      }
+    } else result[key] = valueStr;
+  }
+
+  return result;
+}
+
+function parseSimpleValue(str) {
+  str = str.trim();
+  if (str.startsWith('"') && str.endsWith('"')) return str.slice(1, -1);
+  if (str === 'true') return true;
+  if (str === 'false') return false;
+  const num = parseFloat(str);
+  if (!isNaN(num)) return num;
+  return str;
+}
+
+// ================================================================
+//  AUTOCOMPLETE UI
+// ================================================================
+
+const autocompleteDropdown = $('autocompleteDropdown');
+const autocompleteWrapper = $('autocompleteWrapper');
+
+function getAutocompletePosition() {
+  const text = codeInput.value;
+  const pos = codeInput.selectionStart;
+  const beforeCursor = text.slice(0, pos);
+  const lines = beforeCursor.split('\n');
+  const lineNum = lines.length;
+  const colNum = lines[lines.length - 1].length;
+
+  const lineHeight = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--font-size')) *
+                     parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--line-height'));
+  const charWidth = 8.4;
+  const paddingTop = 10;
+  const paddingLeft = 16;
+
+  const x = paddingLeft + colNum * charWidth - codeInput.scrollLeft;
+  const y = paddingTop + (lineNum - 1) * lineHeight - codeInput.scrollTop + lineHeight;
+
+  return { x, y };
+}
+
+function showAutocomplete(context) {
+  const { type, prefix, items: rawItems } = context;
+  const filtered = filterAutocompleteItems(rawItems, prefix);
+
+  if (filtered.length === 0) {
+    hideAutocomplete();
+    return;
+  }
+
+  autocompleteState.active = true;
+  autocompleteState.items = filtered;
+  autocompleteState.selectedIndex = 0;
+  autocompleteState.context = context;
+
+  const [labelText, labelClass] = getTypeLabel(type);
+
+  let html = '';
+  for (let i = 0; i < filtered.length; i++) {
+    const item = filtered[i];
+    const selected = i === 0 ? ' selected' : '';
+    const highlighted = prefix
+      ? item.replace(new RegExp('^(' + prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'i'), '<span class="match">$1</span>')
+      : item;
+    const tagHtml = labelClass ? `<span class="label-tag ${labelClass}">${labelText}</span>` : '';
+    html += `<div class="autocomplete-item${selected}" data-index="${i}">${highlighted}${tagHtml}</div>`;
+  }
+
+  autocompleteDropdown.innerHTML = html;
+
+  // Position
+  const pos = getAutocompletePosition();
+  autocompleteWrapper.style.left = Math.min(pos.x, editorWrapper.clientWidth - 200) + 'px';
+  autocompleteWrapper.style.top = Math.min(pos.y, editorWrapper.clientHeight - 240) + 'px';
+  autocompleteWrapper.style.display = 'block';
+  autocompleteWrapper.classList.add('active');
+
+  // Ensure selected item is visible
+  const selectedEl = autocompleteDropdown.querySelector('.selected');
+  if (selectedEl) {
+    selectedEl.scrollIntoView({ block: 'nearest' });
+  }
+}
+
+function hideAutocomplete() {
+  autocompleteState.active = false;
+  autocompleteState.items = [];
+  autocompleteState.selectedIndex = 0;
+  autocompleteState.context = null;
+  autocompleteWrapper.style.display = 'none';
+  autocompleteWrapper.classList.remove('active');
+}
+
+function selectAutocompleteNext() {
+  if (!autocompleteState.active || autocompleteState.items.length === 0) return;
+  autocompleteState.selectedIndex = (autocompleteState.selectedIndex + 1) % autocompleteState.items.length;
+  updateAutocompleteSelection();
+}
+
+function selectAutocompletePrev() {
+  if (!autocompleteState.active || autocompleteState.items.length === 0) return;
+  autocompleteState.selectedIndex = (autocompleteState.selectedIndex - 1 + autocompleteState.items.length) % autocompleteState.items.length;
+  updateAutocompleteSelection();
+}
+
+function updateAutocompleteSelection() {
+  const items = autocompleteDropdown.querySelectorAll('.autocomplete-item');
+  items.forEach((el, i) => {
+    el.classList.toggle('selected', i === autocompleteState.selectedIndex);
+  });
+  const selectedEl = items[autocompleteState.selectedIndex];
+  if (selectedEl) {
+    selectedEl.scrollIntoView({ block: 'nearest' });
+  }
+}
+
+function applyAutocomplete() {
+  if (!autocompleteState.active || autocompleteState.items.length === 0) return false;
+
+  const selected = autocompleteState.items[autocompleteState.selectedIndex];
+  const text = codeInput.value;
+  const pos = codeInput.selectionStart;
+  const beforeCursor = text.slice(0, pos);
+  const currentWord = getCurrentWord(beforeCursor);
+
+  // Replace the current word with the selected completion
+  const start = pos - currentWord.length;
+  const end = pos;
+  const insertText = selected;
+
+  // Insert with proper spacing if needed
+  let suffix = '';
+  // If insertion is a function-like thing, add parentheses automatically
+  if (EVENT_TYPES.has(selected) || CONDITION_TYPES.has(selected) || ACTION_TYPES.has(selected)) {
+    suffix = '(';
+  }
+  // If it's a named argument, add space after colon
+  if (selected.endsWith(':')) {
+    suffix = ' ';
+  }
+
+  codeInput.value = text.slice(0, start) + insertText + suffix + text.slice(end);
+  const newPos = start + insertText.length + suffix.length;
+  codeInput.selectionStart = codeInput.selectionEnd = newPos;
+
+  hideAutocomplete();
+  syncEditor();
+  return true;
+}
+
+function triggerAutocomplete() {
+  const text = codeInput.value;
+  const pos = codeInput.selectionStart;
+  const context = getCompletionContext(text, pos);
+  if (context && context.items && context.items.length > 0) {
+    showAutocomplete(context);
+  } else {
+    hideAutocomplete();
+  }
+}
+
+// ================================================================
+//  EDITOR SYNC
+// ================================================================
+
+function syncEditor() {
+  const text = codeInput.value;
+  state.text = text;
+
+  // Syntax highlighting
+  codeOutput.innerHTML = highlightText(text) + '\n';
+
+  // Gutter
+  updateGutter(text);
+
+  // Indent guides
+  updateIndentGuides(text);
+
+  // Status
+  try {
+    pseudoToJson(text);
+    statusText.textContent = 'Ready';
+    statusDot.className = 'status-dot ready';
+    state.parseError = null;
+    statusExtra.textContent = '';
+  } catch (e) {
+    statusText.textContent = 'Parse Error';
+    statusDot.className = 'status-dot error';
+    state.parseError = e.message;
+    statusExtra.textContent = e.message;
+  }
+
+  updateCursorInfo();
+}
+
+function updateCursorInfo() {
+  const text = codeInput.value;
+  const pos = codeInput.selectionStart;
+  const lines = text.substring(0, pos).split('\n');
+  lineColInfo.textContent = `Ln ${lines.length}, Col ${lines[lines.length-1].length + 1}`;
+  charCount.textContent = `${text.length} chars`;
+}
+
+// ================================================================
+//  EDITOR EVENTS
+// ================================================================
+
+codeInput.addEventListener('input', () => {
+  syncEditor();
+  // Trigger autocomplete after a small delay to let state settle
+  clearTimeout(window._autoCompleteTimer);
+  window._autoCompleteTimer = setTimeout(triggerAutocomplete, 30);
+});
+
+codeInput.addEventListener('scroll', () => {
+  codeOutput.scrollTop = codeInput.scrollTop;
+  gutter.scrollTop = codeInput.scrollTop;
+  hideAutocomplete();
+  hideGutterTooltip();
+});
+
+codeInput.addEventListener('blur', () => {
+  // Delay hiding to allow click on autocomplete item
+  setTimeout(() => {
+    if (!autocompleteWrapper.matches(':hover')) {
+      hideAutocomplete();
+    }
+  }, 150);
+});
+
+codeInput.addEventListener('click', () => {
+  hideAutocomplete();
+  updateCursorInfo();
+});
+
+codeInput.addEventListener('keyup', (e) => {
+  if (!e.ctrlKey && !e.metaKey && !autocompleteState.active) {
+    clearTimeout(window._autoCompleteTimer);
+    window._autoCompleteTimer = setTimeout(triggerAutocomplete, 50);
+  }
+  updateCursorInfo();
+});
+
+// Click on autocomplete item
+autocompleteDropdown.addEventListener('mousedown', (e) => {
+  const item = e.target.closest('.autocomplete-item');
+  if (item) {
+    const index = parseInt(item.dataset.index, 10);
+    autocompleteState.selectedIndex = index;
+    updateAutocompleteSelection();
+  }
+});
+
+autocompleteDropdown.addEventListener('click', (e) => {
+  const item = e.target.closest('.autocomplete-item');
+  if (item) {
+    const index = parseInt(item.dataset.index, 10);
+    autocompleteState.selectedIndex = index;
+    applyAutocomplete();
+    codeInput.focus();
+  }
+});
+
+// ================================================================
+//  GUTTER TOOLTIP — Show compile errors on hover
+// ================================================================
+
+let gutterTooltipEl = null;
+let gutterTooltipTimer = null;
+
+function showGutterTooltip(e) {
+  const lineDiv = e.target.closest('.gutter-line');
+  if (!lineDiv) return;
+  const lineNum = parseInt(lineDiv.dataset.line, 10);
+  if (!lineNum) return;
+  const errs = state.compileErrors[lineNum];
+  if (!errs || errs.length === 0) return;
+
+  // Clear previous timer
+  if (gutterTooltipTimer) clearTimeout(gutterTooltipTimer);
+
+  // Remove existing tooltip
+  if (gutterTooltipEl) gutterTooltipEl.remove();
+
+  gutterTooltipEl = document.createElement('div');
+  gutterTooltipEl.className = 'gutter-tooltip';
+
+  let html = '';
+  for (const err of errs) {
+    const icon = err.type === 'error' ? '✗' : '⚠';
+    html += `<div class="tooltip-line ${err.type}"><span class="tt-icon">${icon}</span><span class="tt-text">${escapeHtml(err.text)}</span></div>`;
+  }
+  gutterTooltipEl.innerHTML = html;
+  document.body.appendChild(gutterTooltipEl);
+
+  // Position tooltip near the gutter line
+  const gutterRect = gutter.getBoundingClientRect();
+  const lineRect = lineDiv.getBoundingClientRect();
+  const tooltipRect = gutterTooltipEl.getBoundingClientRect();
+
+  let top = lineRect.top - tooltipRect.height - 4;
+  if (top < 4) top = lineRect.bottom + 4;
+  if (top + tooltipRect.height > window.innerHeight - 4) {
+    top = window.innerHeight - tooltipRect.height - 4;
+  }
+
+  gutterTooltipEl.style.top = top + 'px';
+  gutterTooltipEl.style.left = (gutterRect.right + 8) + 'px';
+}
+
+function hideGutterTooltip() {
+  if (gutterTooltipTimer) clearTimeout(gutterTooltipTimer);
+  gutterTooltipTimer = setTimeout(() => {
+    if (gutterTooltipEl) {
+      gutterTooltipEl.remove();
+      gutterTooltipEl = null;
+    }
+    gutterTooltipTimer = null;
+  }, 150);
+}
+
+// Gutter hover events (delegated) — use mousemove to track line changes
+let lastTooltipLine = 0;
+
+gutter.addEventListener('mousemove', (e) => {
+  if (gutter._tooltipRaf) return;
+  gutter._tooltipRaf = requestAnimationFrame(() => {
+    gutter._tooltipRaf = null;
+    const lineDiv = e.target.closest('.gutter-line');
+    if (!lineDiv) return;
+    const lineNum = parseInt(lineDiv.dataset.line, 10);
+    if (lineNum && lineNum !== lastTooltipLine && state.compileErrors[lineNum]) {
+      lastTooltipLine = lineNum;
+      showGutterTooltip(e);
+    }
+  });
+}, true);
+
+gutter.addEventListener('mouseleave', () => {
+  lastTooltipLine = 0;
+  hideGutterTooltip();
+}, true);
+
+// Close tooltip when clicking anywhere
+// (We want to preserve existing mousedown handler for autocomplete)
+
+// Close autocomplete when clicking outside
+document.addEventListener('mousedown', (e) => {
+  if (!autocompleteWrapper.contains(e.target) && e.target !== codeInput) {
+    hideAutocomplete();
+  }
+});
+
+codeInput.addEventListener('keydown', (e) => {
+  // ── Autocomplete navigation ──
+  if (autocompleteState.active) {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      selectAutocompleteNext();
+      return;
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      selectAutocompletePrev();
+      return;
+    }
+    if (e.key === 'Enter' || e.key === 'Tab') {
+      e.preventDefault();
+      applyAutocomplete();
+      return;
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      hideAutocomplete();
+      return;
+    }
+  }
+
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const start = codeInput.selectionStart;
+    const end = codeInput.selectionEnd;
+    const text = codeInput.value;
+
+    if (e.shiftKey) {
+      const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+      const line = text.substring(lineStart);
+      if (line.startsWith('    ')) {
+        codeInput.value = text.substring(0, lineStart) + line.substring(4) + text.substring(end);
+        codeInput.selectionStart = codeInput.selectionEnd = Math.max(start - 4, lineStart);
+      }
+    } else {
+      codeInput.value = text.substring(0, start) + '    ' + text.substring(end);
+      codeInput.selectionStart = codeInput.selectionEnd = start + 4;
+    }
+    syncEditor();
+    return;
+  }
+
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault();
+    saveFile();
+    return;
+  }
+
+  if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
+    e.preventDefault();
+    loadFile();
+    return;
+  }
+
+  if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+    e.preventDefault();
+    openDocs();
+  }
+
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const start = codeInput.selectionStart;
+    const text = codeInput.value;
+    const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+    const currentLine = text.substring(lineStart, start);
+    const indent = currentLine.match(/^(\s*)/)[1];
+
+    let insertion = '\n' + indent;
+    codeInput.value = text.substring(0, start) + insertion + text.substring(codeInput.selectionEnd);
+    codeInput.selectionStart = codeInput.selectionEnd = start + insertion.length;
+
+    // Extra indent after "then:"
+    if (currentLine.trim() === 'then:') {
+      codeInput.value = codeInput.value.substring(0, start + insertion.length) + '    ' + codeInput.value.substring(start + insertion.length);
+      codeInput.selectionStart = codeInput.selectionEnd = start + insertion.length + 4;
+    }
+
+    syncEditor();
+    return;
+  }
+
+  if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+    e.preventDefault();
+    const start = codeInput.selectionStart;
+    const text = codeInput.value;
+    const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+    const lineEnd = text.indexOf('\n', start);
+    const endPos = lineEnd === -1 ? text.length : lineEnd;
+    const line = text.substring(lineStart, endPos);
+    const nl = lineEnd === -1 ? '\n' : '';
+    codeInput.value = text.substring(0, endPos) + nl + line + text.substring(endPos);
+    syncEditor();
+    return;
+  }
+
+  if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+    e.preventDefault();
+    const start = codeInput.selectionStart;
+    const text = codeInput.value;
+    const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+    const lineEnd = text.indexOf('\n', start);
+    const endPos = lineEnd === -1 ? text.length : lineEnd;
+    const lineRange = text.substring(lineStart, endPos);
+
+    if (lineRange.trim().startsWith('//')) {
+      codeInput.value = text.substring(0, lineStart) + lineRange.replace(/^\s*\/\//, '') + text.substring(endPos);
+    } else {
+      const ws = lineRange.match(/^(\s*)/)[1];
+      codeInput.value = text.substring(0, lineStart) + ws + '// ' + lineRange.trim() + text.substring(endPos);
+    }
+    syncEditor();
+    return;
+  }
+
+  setTimeout(updateCursorInfo, 0);
+});
+
+// ================================================================
+// ================================================================
+//  SIDEBAR / RECENT FILES
+// ================================================================
+
+function toggleSidebar(view) {
+  if (state.sidebarView === view && !state.sidebarCollapsed) {
+    state.sidebarCollapsed = true;
+    sidebarPanel.classList.add('collapsed');
+    document.querySelectorAll('.activity-bar-btn').forEach(b => b.classList.remove('active'));
+    return;
+  }
+  state.sidebarCollapsed = false;
+  state.sidebarView = view;
+  sidebarPanel.classList.remove('collapsed');
+  document.querySelectorAll('.activity-bar-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('btnFiles');
+  if (btn) btn.classList.add('active');
+  updateFileList();
+}
+
+function addRecentFile(fileName, jsonObj) {
+  state.recentFiles = state.recentFiles.filter(f => f.name !== fileName);
+  state.recentFiles.unshift({ name: fileName, data: jsonObj });
+  if (state.recentFiles.length > 20) state.recentFiles.pop();
+  updateFileList();
+}
+
+function switchToFile(fileName) {
+  const file = state.recentFiles.find(f => f.name === fileName);
+  if (!file) return;
+  state.fileName = fileName;
+  state.sourceJson = file.data;
+  codeInput.value = jsonToPseudo(file.data);
+  syncEditor();
+  fileNameDisplay.style.display = 'inline-flex';
+  fileNameText.textContent = fileName;
+  updateFileList();
+}
+
+function closeFile(fileName, e) {
+  e.stopPropagation();
+  state.recentFiles = state.recentFiles.filter(f => f.name !== fileName);
+  if (state.fileName === fileName) {
+    if (state.recentFiles.length > 0) {
+      switchToFile(state.recentFiles[0].name);
+    } else {
+      state.fileName = null;
+      state.sourceJson = null;
+      codeInput.value = '';
+      syncEditor();
+      fileNameDisplay.style.display = 'none';
+    }
+  }
+  updateFileList();
+}
+
+function closeAllFiles() {
+  state.recentFiles = [];
+  state.fileName = null;
+  state.sourceJson = null;
+  codeInput.value = '';
+  syncEditor();
+  fileNameDisplay.style.display = 'none';
+  updateFileList();
+}
+
+function updateFileList() {
+  if (!fileList) return;
+  if (state.recentFiles.length === 0) {
+    fileList.innerHTML = '<div class="file-list-empty">No open files<br>Click 📁 or use Ctrl+O to open a JSON file</div>';
+    return;
+  }
+  let html = '';
+  for (const file of state.recentFiles) {
+    const active = file.name === state.fileName ? ' active' : '';
+    const safe = file.name.replace(/'/g, "\\'");
+    html += '<div class="file-list-item' + active + '" onclick="switchToFile(\'' + safe + '\')">';
+    html += '  <span class="file-icon">📄</span>';
+    html += '  <span>' + escapeHtml(file.name) + '</span>';
+    html += '  <button class="file-close" onclick="closeFile(\'' + safe + '\', event)" title="Close">✕</button>';
+    html += '</div>';
+  }
+  fileList.innerHTML = html;
+}
+//  DRAG & DROP
+// ================================================================
+
+let dragCounter = 0;
+
+editorWrapper.addEventListener('dragenter', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  dragCounter++;
+  if (dragCounter > 0) dropOverlay.classList.add('active');
+});
+
+editorWrapper.addEventListener('dragleave', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  dragCounter--;
+  if (dragCounter <= 0) {
+    dragCounter = 0;
+    dropOverlay.classList.remove('active');
+  }
+});
+
+editorWrapper.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+});
+
+editorWrapper.addEventListener('drop', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  dragCounter = 0;
+  dropOverlay.classList.remove('active');
+
+  const file = e.dataTransfer.files[0];
+  if (!file || !file.name.endsWith('.json')) {
+    showNotification('Please drop a JSON file.', 'error');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    try {
+      const jsonObj = JSON.parse(evt.target.result);
+      state.fileName = file.name;
+      state.sourceJson = jsonObj;
+      addRecentFile(file.name, jsonObj);
+      codeInput.value = jsonToPseudo(jsonObj);
+      syncEditor();
+      fileNameDisplay.style.display = 'inline-flex';
+      fileNameText.textContent = file.name;
+      showNotification('File loaded via drag & drop!', 'success');
+    } catch (err) {
+      showNotification('Error: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+});
+
+// ================================================================
+//  LOAD FILE
+// ================================================================
+
+function loadFile() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const jsonObj = JSON.parse(evt.target.result);
+        state.fileName = file.name;
+        addRecentFile(file.name, jsonObj);
+        state.sourceJson = jsonObj;
+        codeInput.value = jsonToPseudo(jsonObj);
+        syncEditor();
+        fileNameDisplay.style.display = 'inline-flex';
+        fileNameText.textContent = file.name;
+        showNotification('File loaded and converted!', 'success');
+      } catch (err) {
+        showNotification('Error parsing JSON: ' + err.message, 'error');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// ================================================================
+//  SAVE FILE
+// ================================================================
+
+// ================================================================
+//  COMPILE — Line-by-Line Validation
+// ================================================================
+
+function compileScript() {
+  const text = codeInput.value;
+  const lines = text.split('\n');
+  const errors = [];
+  const warnings = [];
+  const infos = [];
+
+  if (text.trim() === '') {
+    errors.push({ line: 1, text: 'Editor is empty — nothing to compile.' });
+    showCompileLog(errors, warnings, infos);
+    return;
+  }
+
+  // Track trigger block boundaries for context
+  let inTrigger = false;
+  let inCondition = false;
+  let inActions = false;
+
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i];
+    const trimmed = rawLine.trim();
+    const lineNum = i + 1;
+
+    // Skip empty lines and comments
+    if (trimmed === '' || trimmed.startsWith('//')) continue;
+
+    // ── Metadata line (@key: value) ──
+    if (trimmed.startsWith('@')) {
+      const colonIdx = trimmed.indexOf(':');
+      if (colonIdx === -1) {
+        errors.push({ line: lineNum, text: 'Metadata line missing colon.' });
+        continue;
+      }
+      const key = trimmed.slice(1, colonIdx).trim();
+      if (!key) {
+        errors.push({ line: lineNum, text: 'Empty metadata key after @.' });
+        continue;
+      }
+      if (!META_KEYS.includes(key)) {
+        warnings.push({ line: lineNum, text: 'Unknown metadata key "' + key + '". Not recognized by the editor — will be preserved as-is.' });
+      }
+      inTrigger = false; inCondition = false; inActions = false;
+      continue;
+    }
+
+    // ── Trigger event line (on ...) ──
+    if (trimmed.startsWith('on ')) {
+      const match = trimmed.match(/^on\s+([a-zA-Z_-]+)/);
+      if (!match) {
+        errors.push({ line: lineNum, text: 'Invalid event syntax. Expected: on <event-type>(<args>)' });
+        continue;
+      }
+      const eventType = match[1];
+      if (!EVENT_TYPES.has(eventType)) {
+        errors.push({ line: lineNum, text: 'Unknown event type "' + eventType + '".' });
+      }
+      // Check for unmatched parentheses
+      const parens = trimmed.match(/\(/g) || [];
+      const closeParens = trimmed.match(/\)/g) || [];
+      if (parens.length !== closeParens.length) {
+        errors.push({ line: lineNum, text: 'Unmatched parentheses in event declaration.' });
+      }
+      currentEventLine = lineNum;
+      currentEventType = eventType;
+      inTrigger = true;
+      inCondition = false;
+      inActions = false;
+      continue;
+    }
+
+    // ── Condition line (if ...) ──
+    if (trimmed.startsWith('if ')) {
+      if (!inTrigger) {
+        errors.push({ line: lineNum, text: 'Condition outside of a trigger block. Place after an "on" line.' });
+        continue;
+      }
+      const content = trimmed.slice(3).trim();
+      if (!content) {
+        errors.push({ line: lineNum, text: 'Empty condition after "if".' });
+        continue;
+      }
+      // Check each condition in the chain
+      const parts = content.split(/\s+(and|or)\s+/);
+      for (let p = 0; p < parts.length; p++) {
+        const part = parts[p].trim();
+        if (part === 'and' || part === 'or') continue;
+        const condMatch = part.match(/^([a-zA-Z_-]+)\s*(?:\(([^)]*)\))?\s*$/);
+        if (!condMatch) {
+          errors.push({ line: lineNum, text: 'Invalid condition syntax: "' + part + '". Expected: <condition-type>(<args>)' });
+          continue;
+        }
+        const condType = condMatch[1];
+        if (!CONDITION_TYPES.has(condType)) {
+          errors.push({ line: lineNum, text: 'Unknown condition type "' + condType + '".' });
+        }
+        // Check paren balance
+        const condParens = (condMatch[2] || '').match(/\(/g) || [];
+        const condCloseParens = (condMatch[2] || '').match(/\)/g) || [];
+        if (condParens.length !== condCloseParens.length) {
+          errors.push({ line: lineNum, text: 'Unmatched parentheses in condition arguments.' });
+        }
+      }
+      inCondition = true;
+      inActions = false;
+      continue;
+    }
+
+    // ── "then:" line ──
+    if (trimmed === 'then:' || trimmed.startsWith('then:')) {
+      if (!inTrigger) {
+        errors.push({ line: lineNum, text: '"then:" outside of a trigger block.' });
+        continue;
+      }
+      inActions = true;
+      inCondition = false;
+      continue;
+    }
+
+    // ── Action line (indented, after then:) ──
+    const indent = rawLine.search(/\S/);
+    if (indent >= 4 && inActions) {
+      const actionMatch = trimmed.match(/^([a-zA-Z_-]+)\s*(?:\(([^)]*)\))?\s*$/);
+      if (!actionMatch) {
+        errors.push({ line: lineNum, text: 'Invalid action syntax: "' + trimmed + '". Expected: <action-type>(<args>)' });
+        continue;
+      }
+      const actionType = actionMatch[1];
+      if (!ACTION_TYPES.has(actionType)) {
+        errors.push({ line: lineNum, text: 'Unknown action type "' + actionType + '".' });
+      }
+      // Check paren balance
+      const actionParens = (actionMatch[2] || '').match(/\(/g) || [];
+      const actionCloseParens = (actionMatch[2] || '').match(/\)/g) || [];
+      if (actionParens.length !== actionCloseParens.length) {
+        errors.push({ line: lineNum, text: 'Unmatched parentheses in action arguments.' });
+      }
+      continue;
+    }
+
+    // ── Indented line that doesn't match known patterns ──
+    if (indent >= 4) {
+      warnings.push({ line: lineNum, text: 'Indented line does not match known trigger/action syntax: "' + trimmed + '".' });
+      continue;
+    }
+
+    // ── Line we can't classify ──
+    warnings.push({ line: lineNum, text: 'Unrecognized line content: "' + trimmed + '".' });
+  }
+
+  // If no errors, try to generate JSON and validate round-trip
+  let jsonResult = null;
+  if (errors.length === 0) {
+    try {
+      jsonResult = pseudoToJson(text);
+      // Check if JSON generates valid pseudo (round-trip)
+      try {
+        const regenerated = jsonToPseudo(jsonResult);
+        // Try parsing it back
+        pseudoToJson(regenerated);
+        infos.push({ line: 0, text: 'Round-trip validation passed — JSON can be re-imported.' });
+      } catch (e) {
+        warnings.push({ line: 0, text: 'JSON generated, but round-trip may have data loss: ' + e.message });
+      }
+    } catch (e) {
+      errors.push({ line: 0, text: 'Failed to generate JSON: ' + e.message });
+    }
+  }
+
+  // Generate stats
+  const triggerBlocks = (jsonResult && jsonResult.trigger) ? jsonResult.trigger.length : 0;
+  const metaCount = jsonResult ? Object.keys(jsonResult).filter(k => k !== 'trigger').length : 0;
+
+  if (errors.length === 0) {
+    infos.push({ line: 0, text: 'Generated ' + triggerBlocks + ' trigger(s), ' + metaCount + ' metadata field(s).' });
+  }
+
+  // Store errors in state for gutter tooltips
+  state.compileErrors = {};
+  state.compileErrorCount = errors.length + warnings.length;
+  for (const e of errors) {
+    if (e.line > 0) {
+      if (!state.compileErrors[e.line]) state.compileErrors[e.line] = [];
+      state.compileErrors[e.line].push({ type: 'error', text: e.text });
+    }
+  }
+  for (const w of warnings) {
+    if (w.line > 0) {
+      if (!state.compileErrors[w.line]) state.compileErrors[w.line] = [];
+      state.compileErrors[w.line].push({ type: 'warning', text: w.text });
+    }
+  }
+  // Update gutter to show markers
+  updateGutter(codeInput.value);
+
+  showCompileLog(errors, warnings, infos);
+}
+
+function goToLine(lineNum) {
+  if (lineNum <= 0) return;
+  const text = codeInput.value;
+  const lines = text.split('\n');
+  let pos = 0;
+  for (let i = 0; i < Math.min(lineNum - 1, lines.length); i++) {
+    pos += lines[i].length + 1;
+  }
+  codeInput.focus();
+  codeInput.selectionStart = pos;
+  codeInput.selectionEnd = pos;
+  codeInput.scrollTop = (lineNum - 4) * (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--font-size')) * parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--line-height')));
+  syncEditor();
+}
+
+function showCompileLog(errors, warnings, infos) {
+  // Remove existing log modal
+  const existing = document.getElementById('compileLogModal');
+  if (existing) existing.remove();
+
+  const hasErrors = errors.length > 0;
+  const hasWarnings = warnings.length > 0;
+
+  const modal = document.createElement('div');
+  modal.id = 'compileLogModal';
+  modal.className = 'compile-modal';
+
+  const panel = document.createElement('div');
+  panel.className = 'compile-panel';
+
+  // ── Header ──
+  const header = document.createElement('div');
+  header.className = 'compile-header';
+
+  const title = document.createElement('div');
+  title.className = 'title ' + (hasErrors ? 'error' : hasWarnings ? 'warning' : 'success');
+  title.innerHTML = (hasErrors ? '✗' : '✓') + ' Compilation ' + (hasErrors ? 'Failed' : 'Successful');
+  header.appendChild(title);
+
+  const stats = document.createElement('div');
+  stats.className = 'stats';
+  const parts = [];
+  if (errors.length > 0) parts.push(errors.length + ' error(s)');
+  if (warnings.length > 0) parts.push(warnings.length + ' warning(s)');
+  if (infos.length > 0) parts.push(infos.length + ' info');
+  stats.textContent = parts.join(', ');
+  header.appendChild(stats);
+
+  const closeBtn = document.createElement('div');
+  closeBtn.className = 'compile-close';
+  closeBtn.textContent = '✕';
+  closeBtn.onclick = () => modal.remove();
+  header.appendChild(closeBtn);
+  panel.appendChild(header);
+
+  // ── Body ──
+  const body = document.createElement('div');
+  body.className = 'compile-body';
+
+  function addMsg(icon, cls, lineNum, text) {
+    const msg = document.createElement('div');
+    msg.className = 'compile-msg ' + cls;
+
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'icon';
+    iconSpan.textContent = icon;
+    msg.appendChild(iconSpan);
+
+    const lineSpan = document.createElement('span');
+    lineSpan.className = 'line-num';
+    if (lineNum > 0) {
+      lineSpan.textContent = 'L' + lineNum;
+      lineSpan.style.cursor = 'pointer';
+      lineSpan.onclick = (e) => {
+        e.stopPropagation();
+        goToLine(lineNum);
+        modal.remove();
+      };
+    } else {
+      lineSpan.textContent = '';
+    }
+    msg.appendChild(lineSpan);
+
+    const textSpan = document.createElement('span');
+    textSpan.className = 'text';
+    textSpan.textContent = text;
+    msg.appendChild(textSpan);
+
+    // Click on the whole row to go to line
+    if (lineNum > 0) {
+      msg.onclick = () => {
+        goToLine(lineNum);
+        modal.remove();
+      };
+    }
+
+    body.appendChild(msg);
+  }
+
+  // Show errors first
+  for (const e of errors) addMsg('✗', 'error', e.line, e.text);
+  // Then warnings
+  for (const w of warnings) addMsg('⚠', 'warning', w.line, w.text);
+  // Then info
+  for (const i of infos) addMsg('ℹ', 'info', i.line, i.text);
+
+  // If no messages at all, show success
+  if (errors.length === 0 && warnings.length === 0 && infos.length === 0) {
+    addMsg('✓', 'success', 0, 'No issues found — script compiles perfectly.');
+  }
+
+  panel.appendChild(body);
+
+  // ── Footer ──
+  const footer = document.createElement('div');
+  footer.className = 'compile-footer';
+
+  const closeFooterBtn = document.createElement('button');
+  closeFooterBtn.className = 'btn';
+  closeFooterBtn.textContent = 'Close';
+  closeFooterBtn.onclick = () => modal.remove();
+  footer.appendChild(closeFooterBtn);
+
+  if (!hasErrors) {
+    const previewBtn = document.createElement('button');
+    previewBtn.className = 'btn btn-primary';
+    previewBtn.textContent = 'Preview JSON';
+    previewBtn.onclick = () => { previewJson(); modal.remove(); };
+    footer.appendChild(previewBtn);
+  }
+
+  panel.appendChild(footer);
+  modal.appendChild(panel);
+  document.body.appendChild(modal);
+
+  // Close on Escape
+  const keyHandler = (e) => {
+    if (e.key === 'Escape') { modal.remove(); document.removeEventListener('keydown', keyHandler); }
+  };
+  document.addEventListener('keydown', keyHandler);
+
+  // Click outside
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+}
+
+function saveFile() {
+  try {
+    const pseudo = codeInput.value;
+    const jsonObj = pseudoToJson(pseudo);
+
+    // Preserve fields from original source that might not round-trip
+    if (state.sourceJson) {
+      for (const [key, val] of Object.entries(state.sourceJson)) {
+        if (key === 'trigger') continue;
+        if (!(key in jsonObj)) {
+          jsonObj[key] = val;
+        }
+      }
+    }
+
+    const jsonStr = JSON.stringify(jsonObj, null, 4);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = state.fileName || 'trigger-script.json';
+    a.click();
+    URL.revokeObjectURL(url);
+
+    state.sourceJson = jsonObj;
+    const idx = state.recentFiles.findIndex(f => f.name === state.fileName);
+    if (idx >= 0) state.recentFiles[idx].data = jsonObj;
+    showNotification('Saved as JSON!', 'success');
+  } catch (err) {
+    showNotification('Conversion error: ' + err.message, 'error');
+  }
+}
+
+// ================================================================
+//  PREVIEW JSON
+// ================================================================
+
+function highlightJson(str) {
+  let s = escapeHtml(str);
+  // Step 1: Highlight ALL strings as values first
+  s = s.replace(/("(?:[^"\\]|\.)*")/g, '<span class="js">$1</span>');
+  // Step 2: Re-color strings followed by : as keys
+  s = s.replace(/<span class="js">("(?:[^"\\]|\.)*")<\/span>\s*:/g, '<span class="jk">$1</span><span class="jc">:</span>');
+  // Numbers
+  s = s.replace(/(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g, '<span class="jn">$1</span>');
+  // Booleans and null
+  s = s.replace(/(true|false|null)/g, '<span class="jb">$1</span>');
+  // Brace/bracket highlights
+  s = s.replace(/([\[\]{}])/g, '<span class="jp">$1</span>');
+  return s;
+}
+
+function previewJson() {
+  try {
+    const jsonObj = pseudoToJson(codeInput.value);
+    if (state.sourceJson) {
+      for (const [key, val] of Object.entries(state.sourceJson)) {
+        if (key === 'trigger') continue;
+        if (!(key in jsonObj)) jsonObj[key] = val;
+      }
+    }
+    const jsonStr = JSON.stringify(jsonObj, null, 2);
+
+    const existing = document.getElementById('jsonPreviewModal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'jsonPreviewModal';
+    modal.style.cssText = `
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-family);
+    `;
+
+    const header = document.createElement('div');
+    header.style.cssText = `
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 14px; background: #2d2e2a;
+      border-bottom: 1px solid #3e3d32;
+      border-radius: 6px 6px 0 0;
+      flex-shrink: 0;
+      cursor: default;
+      user-select: none;
+    `;
+    header.innerHTML = '<span style="color:var(--accent-pink);font-weight:600;font-size:12px;">△ JSON PREVIEW</span>' +
+      '<button id="jpClose" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:16px;padding:0 4px;" title="Close (Esc)">✕</button>';
+    header.querySelector('#jpClose').onclick = () => modal.remove();
+
+    const pre = document.createElement('div');
+    pre.style.cssText = `
+      background: #1b1c18; color: #f8f8f2;
+      padding: 16px 20px;
+      overflow: auto;
+      font-family: var(--font-family);
+      font-size: 12px;
+      line-height: 1.6;
+      white-space: pre;
+      tab-size: 2;
+      outline: none;
+      flex: 1;
+      min-height: 100px;
+    `;
+    pre.tabIndex = 0;
+    pre.innerHTML = highlightJson(jsonStr);
+
+    const resizeHandle = document.createElement('div');
+    resizeHandle.style.cssText = `
+      width: 16px; height: 16px;
+      position: absolute; bottom: 0; right: 0;
+      cursor: nwse-resize;
+      background: linear-gradient(135deg, transparent 50%, #49483e 50%);
+      border-radius: 0 0 6px 0;
+    `;
+
+    const container = document.createElement('div');
+    container.style.cssText = `
+      display: flex; flex-direction: column;
+      background: #1b1c18;
+      border: 1px solid #3e3d32;
+      border-radius: 6px;
+      width: min(80vw, 900px);
+      height: min(80vh, 700px);
+      min-width: 400px;
+      min-height: 250px;
+      position: relative;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      overflow: hidden;
+    `;
+
+    // Resize logic
+    let isResizing = false;
+    let startX, startY, startW, startH;
+
+    resizeHandle.addEventListener('mousedown', (e) => {
+      isResizing = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      startW = container.offsetWidth;
+      startH = container.offsetHeight;
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isResizing || !container.parentNode) return;
+      const w = Math.max(400, startW + (e.clientX - startX));
+      const h = Math.max(250, startH + (e.clientY - startY));
+      container.style.width = w + 'px';
+      container.style.height = h + 'px';
+    });
+
+    document.addEventListener('mouseup', () => {
+      isResizing = false;
+    });
+
+    container.appendChild(header);
+    container.appendChild(pre);
+    container.appendChild(resizeHandle);
+    modal.appendChild(container);
+    document.body.appendChild(modal);
+
+    modal.onclick = (e) => { if (e.target === modal) { isResizing = false; modal.remove(); } };
+    document.addEventListener('keydown', function handler(e) {
+      if (e.key === 'Escape') { modal.remove(); document.removeEventListener('keydown', handler); }
+    });
+
+    // Focus and allow keyboard copy
+    setTimeout(() => pre.focus(), 50);
+  } catch (err) {
+    showNotification('Error: ' + err.message, 'error');
+  }
+}
+
+// ================================================================
+//  TOGGLE WRAP
+// ================================================================
+
+function toggleWrap() {
+  state.wordWrap = !state.wordWrap;
+  codeInput.style.whiteSpace = state.wordWrap ? 'pre-wrap' : 'pre';
+  codeInput.setAttribute('wrap', state.wordWrap ? 'on' : 'off');
+  codeOutput.style.whiteSpace = state.wordWrap ? 'pre-wrap' : 'pre';
+  showNotification(state.wordWrap ? 'Word wrap ON' : 'Word wrap OFF', 'info');
+}
+
+// ================================================================
+//  CLEAR
+// ================================================================
+
+function clearEditor() {
+  if (codeInput.value.trim() !== '' && !confirm('Clear current script? Unsaved changes will be lost.')) return;
+  codeInput.value = '';
+  state.fileName = null;
+  state.sourceJson = null;
+  fileNameDisplay.style.display = 'none';
+  syncEditor();
+  showNotification('Editor cleared.', 'info');
+}
+
+// ================================================================
+//  NOTIFICATION
+// ================================================================
+
+let notifTimeout = null;
+
+function showNotification(msg, type = 'info') {
+  notification.textContent = msg;
+  notification.className = 'notification ' + type + ' show';
+  if (notifTimeout) clearTimeout(notifTimeout);
+  notifTimeout = setTimeout(() => notification.classList.remove('show'), 3000);
+}
+
+// ================================================================
+//  DEMO
+// ================================================================
+
+function loadExample() {
+  const example = `// ╔══════════════════════════════════════════╗
+// ║  Duq Trigger Editor — Example    ║
+// ║  Language: Duq Trigger Script v1.0        ║
+// ║  Created by Mence                     ║
+// ╚══════════════════════════════════════════╝
+
+// ─── Simple initialization trigger ───
+on initialization
+        then:
+            delete-save()
+            set-global-variable("sandbox", true)
+            set-gold-all-players(999999)
+            system-sleep(float: 1.0)
+            game-select-subclass()
+
+// ─── Trigger with conditions ───
+on call-event
+    if player-control-type(int: 0) and get-game-context("show-controls")
+        then:
+            set-game-context("none")
+            text-messagebox("interface/icon-info", "MAIN-MENU", "HINT-CAPTION", "HUD", "HINT-0")
+
+// ─── Multiple events + cinematic sequence ───
+on initialization
+        then:
+            unit-hide(unit: "hero", float: 99999.0)
+            music-change("intro")
+            game-event-change(int: 3)
+            system-sleep(float: 1.5)
+            spawn-unit("characters/npcs/mage", "neutral", "mage", x: 1420, y: 2140, summon: false)
+            add-sfx("particles/dust-decay", x: 1460, y: 2190)
+            system-sleep(float: 1.0)
+            text-dialogbox("mage", "UNITS", "MAGE-CAPTION", "MAGE", "BEGIN-1")
+            unit-unhide(unit: "hero")
+            game-event-change(int: 1)
+
+// ─── Unit kill event ───
+on unit-kill(unit: "boss-1")
+        then:
+            system-sleep(float: 2.0)
+            set-global-variable("boss-1", true)
+            set-game-context("rewards")
+            text-messagebox("MAIN-MENU", "INFO-CAPTION", "HUD", "INFO-BOSS-RUN-BREAK")
+            call-event()
+
+// ─── Region entered ───
+on region-entered(unit: "hero", id: 10)
+    if get-game-context("battle")
+        then:
+            call-event()
+            trigger-reset()
+
+// ─── With OR conditions ───
+on unit-kill(unit: "boss-3a")
+    if get-global-variable("boss-2") or get-global-variable("boss-3")
+        then:
+            system-sleep(float: 2.0)
+            set-game-context("rewards")
+            call-event()
+
+@procedural: false
+@unit-spawn-range: 500
+@unit-spawn-limit: 10
+@exit: ""
+`;
+
+  codeInput.value = example;
+  syncEditor();
+  showNotification('Example script loaded! <span class="demo-badge">DEMO</span>', 'success');
+}
+
+// ========== SPLASH SCREEN ==========
+function hideSplash() {
+  const splash = document.getElementById("splash");
+  if (!splash || splash.classList.contains("hiding")) return;
+  splash.classList.add("hiding");
+  setTimeout(() => splash.remove(), 500);
+}
+
+// Auto-hide splash after 2 seconds
+setTimeout(hideSplash, 2000);
+
+// Also hide splash early if user clicks it
+const splashEl = document.getElementById("splash");
+if (splashEl) {
+  splashEl.addEventListener("click", hideSplash);
+}
+// ================================================================
+//  INIT
+// ================================================================
+
+// Editor starts empty — open a JSON file to begin
+console.log('⚡ Duq Trigger Editor — Trigger Script Editor v1.0');
+console.log('Created by Mence');
+console.log('Events:', EVENT_TYPES.size, '| Conditions:', CONDITION_TYPES.size, '| Actions:', ACTION_TYPES.size);
+syncEditor();
+</script>
+</body>
+</html>
