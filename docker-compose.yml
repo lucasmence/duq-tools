@@ -6,14 +6,4 @@ services:
       - "8081:8081"
       - "8082:8082"
       - "8083:8083"
-    volumes:
-      - duq_data:/app
     restart: unless-stopped
-
-volumes:
-  duq_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: .
