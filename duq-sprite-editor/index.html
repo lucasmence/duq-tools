@@ -223,8 +223,8 @@
       </div>
     </div>
 
-    <!-- Middle Panel: Spritesheet (fixed, no longer floating) -->
-    <div class="panel panel-sprite" id="spritesheetModal" style="display:none;">
+    <!-- Middle Panel: Spritesheet (always visible) -->
+    <div class="panel panel-sprite" id="spritesheetModal">
       <div class="panel-header" id="spriteModalHeader">
         <h2>
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
@@ -235,6 +235,14 @@
           <span id="spriteModalTitle">Spritesheet</span>
         </h2>
         <div class="sprite-modal-controls">
+          <button class="btn btn-sm btn-outline" id="btnLoadSpritesheetInline" title="Load Spritesheet (PNG)">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+              <rect x="2" y="2" width="12" height="12" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <circle cx="5.5" cy="5.5" r="1.5" fill="currentColor"/>
+              <path d="M2 10l3-3 2 2 3-4 4 5v2H2V10z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+            </svg>
+            Load
+          </button>
           <span class="sprite-zoom-badge" id="spriteZoomBadge">100%</span>
           <button class="btn btn-sm btn-outline" id="btnZoomIn" title="Zoom +">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -242,11 +250,30 @@
           <button class="btn btn-sm btn-outline" id="btnZoomOut" title="Zoom -">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           </button>
-          <button class="btn btn-sm btn-outline" id="btnCloseModal" title="Close">✕</button>
+          <button class="btn btn-sm btn-outline" id="btnCloseModal" title="Clear spritesheet">✕</button>
         </div>
       </div>
       <div class="panel-content panel-content-sprite">
-        <div class="sprite-canvas-wrapper" id="spriteCanvasWrapper">
+        <div class="sprite-empty-state" id="spriteEmptyState">
+          <div class="sprite-empty-icon">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <rect x="4" y="4" width="40" height="40" rx="4" stroke="currentColor" stroke-width="2" fill="none"/>
+              <circle cx="14" cy="14" r="4" fill="currentColor"/>
+              <path d="M4 32l10-10 8 8 10-14 12 16v4H4V32z" stroke="currentColor" stroke-width="2" fill="none"/>
+            </svg>
+          </div>
+          <p class="sprite-empty-title">No spritesheet loaded</p>
+          <p class="sprite-empty-hint">Click <strong>Load</strong> above or drag & drop a PNG file here</p>
+          <button class="btn btn-outline" id="btnSpriteEmptyLoad">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <rect x="2" y="2" width="12" height="12" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <circle cx="5.5" cy="5.5" r="1.5" fill="currentColor"/>
+              <path d="M2 10l3-3 2 2 3-4 4 5v2H2V10z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+            </svg>
+            Load Spritesheet (PNG)
+          </button>
+        </div>
+        <div class="sprite-canvas-wrapper" id="spriteCanvasWrapper" style="display:none;">
           <canvas id="spriteCanvas"></canvas>
         </div>
       </div>

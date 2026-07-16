@@ -773,6 +773,9 @@ const spriteEl = {
   title:         $('spriteModalTitle'),
   canvas:        $('spriteCanvas'),
   wrapper:       $('spriteCanvasWrapper'),
+  emptyState:    $('spriteEmptyState'),
+  btnEmptyLoad:  $('btnSpriteEmptyLoad'),
+  btnLoadInline: $('btnLoadSpritesheetInline'),
   zoomBadge:     $('spriteZoomBadge'),
   btnZoomIn:     $('btnZoomIn'),
   btnZoomOut:    $('btnZoomOut'),
@@ -812,14 +815,21 @@ function handleSpritesheetLoad(event) {
   event.target.value = '';
 }
 
-// ─── Show / Hide Panel ────────────────────────────────────────────
+// ─── Show / Hide Panel Content ───────────────────────────────────
 function showSpritesheetModal() {
-  spriteEl.modal.style.display = 'flex';
   spriteEl.title.textContent = spritesheetFilename || 'Spritesheet';
+  spriteEl.emptyState.style.display = 'none';
+  spriteEl.wrapper.style.display = 'block';
 }
 
 function closeSpritesheetModal() {
-  spriteEl.modal.style.display = 'none';
+  spritesheetImage = null;
+  spritesheetFilename = '';
+  stopAnimationPreview();
+  spriteEl.wrapper.style.display = 'none';
+  spriteEl.emptyState.style.display = 'flex';
+  spriteEl.title.textContent = 'Spritesheet';
+  spriteEl.coords.textContent = '—';
 }
 
 // ─── Render Canvas ─────────────────────────────────────────────────────────
@@ -1117,14 +1127,14 @@ function toggleAnimationPreview(anim) {
 function selectAnimation(index) {
   if (index < 0 || index >= animations.length) return;
   selectedAnimIndex = index;
-  if (spritesheetImage && spriteEl.modal.style.display !== 'none') {
+  if (spritesheetImage) {
     renderSpritesheet();
   }
 }
 
 // ─── Redraw spritesheet + sync animation preview ──────────────────────────
 function refreshSpritesheet() {
-  if (spritesheetImage && spriteEl.modal.style.display !== 'none') {
+  if (spritesheetImage) {
     renderSpritesheet();
     // Keep the animation preview in sync whenever the spritesheet overlays change
     syncAnimPreview();
@@ -1413,6 +1423,36 @@ spriteEl.btnZoomOut.addEventListener('click', zoomOut);
 spriteEl.canvas.addEventListener('mousemove', onCanvasMouseMove);
 spriteEl.canvas.addEventListener('mouseleave', onCanvasMouseLeave);
 spriteEl.canvas.addEventListener('click', onCanvasClick);
+// Empty state load button and inline load button
+if (spriteEl.btnEmptyLoad) {
+  spriteEl.btnEmptyLoad.addEventListener('click', openSpritesheet);
+}
+if (spriteEl.btnLoadInline) {
+  spriteEl.btnLoadInline.addEventListener('click', openSpritesheet);
+}
+// Drag & drop on spritesheet panel
+spriteEl.modal.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  spriteEl.modal.classList.add('sprite-panel-dragover');
+});
+spriteEl.modal.addEventListener('dragleave', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  spriteEl.modal.classList.remove('sprite-panel-dragover');
+});
+spriteEl.modal.addEventListener('drop', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  spriteEl.modal.classList.remove('sprite-panel-dragover');
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  const acceptedTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/bmp'];
+  if (!acceptedTypes.some(t => file.type.startsWith(t.split('/')[0]))) return;
+  // Create a synthetic event for handleSpritesheetLoad
+  const syntheticEvent = { target: { files: [file], value: '' } };
+  handleSpritesheetLoad(syntheticEvent);
+});
 
 // ─── Event Listeners ─────────────────────────────────────────────────────────
 // Form inputs
