@@ -75,7 +75,6 @@ a = Analysis(
         "unittest",
         "pytest",
         "http.cookiejar",
-        "http.cookies",
         "xml.etree",
         "xml.dom",
         "test",
