@@ -29,10 +29,10 @@ jobs:
         run: python -m pytest tests/ -v --tb=short
 
   # ─────────────────────────────────────────────────────────────────────────────
-  #  WINDOWS BUILD  —  Create duq-tools.exe via PyInstaller
+  #  WINDOWS BUILD  —  Create duq-tools.exe (console) + duq-tools-gui.exe (windowed)
   # ─────────────────────────────────────────────────────────────────────────────
   windows:
-    name: Build Windows executable
+    name: Build Windows executables
     runs-on: windows-latest
     needs: [test]
     permissions:
@@ -55,14 +55,19 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
-      - name: Build with PyInstaller
+      - name: Build console version (duq-tools.exe)
         run: pyinstaller build.spec --noconfirm --clean
 
-      - name: Upload executable as artifact
+      - name: Build GUI version (duq-tools-gui.exe)
+        run: pyinstaller build_gui.spec --noconfirm --clean
+
+      - name: Upload executables as artifact
         uses: actions/upload-artifact@v4
         with:
           name: duq-tools-windows
-          path: dist/duq-tools.exe
+          path: |
+            dist/duq-tools.exe
+            dist/duq-tools-gui.exe
           if-no-files-found: error
           retention-days: 90
 
@@ -79,11 +84,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download Windows executable
+      - name: Download Windows executables
         uses: actions/download-artifact@v4
         with:
           name: duq-tools-windows
           path: release-artifacts
+
+      - name: List downloaded files
+        run: ls -la release-artifacts
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -93,4 +101,6 @@ jobs:
           generate_release_notes: true
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
-          files: release-artifacts/duq-tools.exe
+          files: |
+            release-artifacts/duq-tools.exe
+            release-artifacts/duq-tools-gui.exe
