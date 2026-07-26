@@ -84,17 +84,61 @@ jobs:
           cache-to: type=gha,mode=max
 
   # ─────────────────────────────────────────────────────────────────────────────
+  #  WINDOWS BUILD  —  Create duq-tools.exe via PyInstaller
+  # ─────────────────────────────────────────────────────────────────────────────
+  windows:
+    name: Build Windows executable
+    runs-on: windows-latest
+    needs: [test]
+    permissions:
+      contents: write
+      actions: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build with PyInstaller
+        run: pyinstaller build.spec --noconfirm --clean
+
+      - name: Upload executable as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: duq-tools-windows
+          path: dist/duq-tools.exe
+          if-no-files-found: error
+          retention-days: 90
+
+  # ─────────────────────────────────────────────────────────────────────────────
   #  RELEASE  —  Create GitHub Release with auto-generated notes
   # ─────────────────────────────────────────────────────────────────────────────
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [docker]
+    needs: [docker, windows]
     permissions:
       contents: write
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Download Windows executable
+        uses: actions/download-artifact@v4
+        with:
+          name: duq-tools-windows
+          path: release-artifacts
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -104,3 +148,4 @@ jobs:
           generate_release_notes: true
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
+          files: release-artifacts/duq-tools.exe

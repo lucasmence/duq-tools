@@ -25,7 +25,14 @@ from pathlib import Path
 from flask import Flask, render_template, send_from_directory, abort
 
 # ── Project paths ──────────────────────────────────────────────────────
-BASE_DIR = Path(__file__).resolve().parent
+def _get_base_dir() -> Path:
+    """Get the base directory, works for both development and PyInstaller."""
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS)
+    return Path(__file__).resolve().parent
+
+
+BASE_DIR = _get_base_dir()
 
 TOOL_DIRS = {
     "sprite-editor":  BASE_DIR / "duq-sprite-editor",
