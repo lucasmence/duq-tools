@@ -1,0 +1,29 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Local development
+.env
+.venv/
+venv/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Docker
+.dockerignore
+
+# Old desktop app files (not needed for web version)
+main.py
+get-pip.py
+build.spec
+build_windows.bat

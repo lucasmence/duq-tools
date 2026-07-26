@@ -2,8 +2,21 @@ services:
   duq-tools:
     container_name: duq-tools
     build: .
+    # The app listens on one port (default 5000).
+    # When HTTPS=1 the same port serves HTTPS.
+    # Map a different host port if needed, e.g. "8080:5000"
     ports:
-      - "8081:8081"
-      - "8082:8082"
-      - "8083:8083"
+      - "5000:5000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=5000
+      # Set HTTPS=1 to enable HTTPS with auto-generated self-signed cert
+      - HTTPS=0
+      - DEBUG=0
     restart: unless-stopped
+    # Mount the certs directory so the self-signed cert persists across restarts
+    volumes:
+      - certs:/app/certs
+
+volumes:
+  certs:
