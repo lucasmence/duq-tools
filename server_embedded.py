@@ -14,9 +14,24 @@ Build with PyInstaller using:
 
 import sys
 import os
+import threading
+import time
 
 # ── Import Flask app ────────────────────────────────────────────────
 from server import app, parse_args
+
+
+def _wait_for_server(url: str, timeout: float = 5.0) -> bool:
+    """Wait until the server is reachable at the given URL."""
+    import urllib.request
+    start = time.time()
+    while time.time() - start < timeout:
+        try:
+            urllib.request.urlopen(url, timeout=0.5)
+            return True
+        except (urllib.error.URLError, ConnectionError):
+            time.sleep(0.1)
+    return False
 
 
 def main():
@@ -32,12 +47,28 @@ def main():
     display_host = host if host != "0.0.0.0" else "127.0.0.1"
     url = f"{protocol}://{display_host}:{port}"
 
-    # ── Start Flask in background and create native window ─────────
-    # pywebview manages the Flask server lifecycle internally when
-    # the app object is passed directly — no threading needed.
+    # ── Start Flask in a background thread ──────────────────────────
+    from werkzeug.serving import make_server
+
+    ssl_context = None
+    if use_https:
+        from server import _get_ssl_context
+        ssl_context = _get_ssl_context()
+        if ssl_context is None:
+            protocol = "http"
+            url = f"http://{display_host}:{port}"
+
+    server = make_server(host, port, app, ssl_context=ssl_context)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    # ── Wait for server to be ready ─────────────────────────────────
+    _wait_for_server(url)
+
+    # ── Create native desktop window with embedded browser ──────────
     window = webview.create_window(
         title="duq-tools",
-        url=app,                 # pywebview handles Flask natively
+        url=url,                  # Pass URL string — respects CLI args
         width=1280,
         height=800,
         min_size=(900, 600),
@@ -49,10 +80,13 @@ def main():
 
     # Start the GUI event loop (blocks until window is closed)
     webview.start(
-        gui=None,                # Auto-detect (WebView2 on Windows)
+        gui=None,                 # Auto-detect (WebView2 on Windows)
         private_mode=False,
         debug=debug,
     )
+
+    # ── Cleanup when window is closed ──────────────────────────────
+    server.shutdown()
 
 
 if __name__ == "__main__":
