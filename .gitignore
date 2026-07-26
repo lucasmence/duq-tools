@@ -2,3 +2,6 @@ __pycache__
 build
 dist
 venv
+certs/
+*.pyc
+__pycache__/
