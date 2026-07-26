@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>duq-tools — Game Dev Toolkit</title>
+  <link rel="icon" type="image/png" href="/favicon.ico">
+  <style>
+    /* ═══════════════════════════════════════════════════════
+       RESET & BASE
+       ═══════════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-primary: #0f1117;
+      --bg-secondary: #161922;
+      --bg-card: #1c2030;
+      --bg-hover: #232840;
+      --border-color: #2a2f45;
+      --border-focus: #5b7aff;
+      --text-primary: #e2e4ed;
+      --text-secondary: #8b90a5;
+      --text-muted: #565b73;
+      --accent: #5b7aff;
+      --accent-hover: #7b94ff;
+      --accent-subtle: rgba(91, 122, 255, 0.12);
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font-sans);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.5;
+      overflow: hidden;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       SCROLLBAR
+       ═══════════════════════════════════════════════════════ */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* ═══════════════════════════════════════════════════════
+       APP LAYOUT
+       ═══════════════════════════════════════════════════════ */
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background: var(--bg-primary);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       HEADER
+       ═══════════════════════════════════════════════════════ */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 56px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      image-rendering: pixelated;
+    }
+
+    .logo-text h1 {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      background: linear-gradient(135deg, var(--accent), #7b94ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .logo-text span {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-icon:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+      border-color: var(--text-muted);
+    }
+
+    .version-badge {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 10px;
+      background: var(--accent-subtle);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       TAB BAR
+       ═══════════════════════════════════════════════════════ */
+    .tab-bar {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 6px 20px 0;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      flex-shrink: 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .tab-bar::-webkit-scrollbar { height: 3px; }
+    .tab-bar::-webkit-scrollbar-thumb { background: var(--text-muted); }
+
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      position: relative;
+      min-width: 0;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-secondary);
+      background: var(--bg-hover);
+    }
+
+    .tab-btn.active {
+      color: var(--text-primary);
+      background: var(--bg-primary);
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 8px;
+      right: 8px;
+      height: 2px;
+      border-radius: 1px;
+    }
+
+    .tab-btn .tab-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      image-rendering: pixelated;
+      flex-shrink: 0;
+    }
+
+    .tab-btn .tab-close {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      font-size: 12px;
+      opacity: 0;
+      transition: all 0.12s;
+      flex-shrink: 0;
+      margin-left: 4px;
+    }
+
+    .tab-btn:hover .tab-close {
+      opacity: 0.5;
+    }
+
+    .tab-btn .tab-close:hover {
+      opacity: 1;
+      background: rgba(255, 77, 106, 0.2);
+    }
+
+    .tab-btn .tab-close.editor-only {
+      display: inline-flex;
+    }
+
+    .tab-btn.home-tab .tab-close {
+      display: none;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       TAB CONTENT (IFRAMES)
+       ═══════════════════════════════════════════════════════ */
+    .tab-content {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: var(--bg-primary);
+    }
+
+    .tab-panel {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+      z-index: 0;
+    }
+
+    .tab-panel.active {
+      opacity: 1;
+      visibility: visible;
+      z-index: 1;
+    }
+
+    .tab-panel iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       HOMEPAGE (dashboard)
+       ═══════════════════════════════════════════════════════ */
+    .homepage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 40px 20px;
+      background: radial-gradient(ellipse at 50% 0%, rgba(91, 122, 255, 0.05) 0%, transparent 60%);
+      overflow-y: auto;
+    }
+
+    .homepage-header {
+      text-align: center;
+      margin-bottom: 48px;
+      animation: fadeUp 0.6s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .homepage-header .hero-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 16px;
+      image-rendering: pixelated;
+      margin-bottom: 16px;
+      box-shadow: 0 0 30px rgba(91, 122, 255, 0.15);
+    }
+
+    .homepage-header h2 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .homepage-header p {
+      font-size: 15px;
+      color: var(--text-muted);
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* Tool cards */
+    .tool-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      max-width: 960px;
+      width: 100%;
+    }
+
+    .tool-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      animation: fadeUp 0.6s ease backwards;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tool-card:nth-child(1) { animation-delay: 0.1s; }
+    .tool-card:nth-child(2) { animation-delay: 0.2s; }
+    .tool-card:nth-child(3) { animation-delay: 0.3s; }
+
+    .tool-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--card-accent, var(--accent));
+      opacity: 0.6;
+      transition: opacity 0.25s ease;
+    }
+
+    .tool-card:hover::before {
+      opacity: 1;
+    }
+
+    .tool-card:hover {
+      border-color: var(--card-accent, var(--accent));
+      transform: translateY(-4px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .tool-card:active {
+      transform: translateY(-2px);
+    }
+
+    .tool-card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      image-rendering: pixelated;
+    }
+
+    .tool-card h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+    }
+
+    .tool-card p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      flex: 1;
+    }
+
+    .tool-card .tool-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: var(--accent-subtle);
+      color: var(--card-accent, var(--accent));
+      font-weight: 500;
+      align-self: flex-start;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       STATUS BAR
+       ═══════════════════════════════════════════════════════ */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 20px;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border-color);
+      font-size: 11px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .status-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .status-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .status-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .status-link:hover {
+      color: var(--accent);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════════════════ */
+    @media (max-width: 640px) {
+      .header { padding: 0 12px; }
+      .tab-bar { padding: 6px 12px 0; }
+      .homepage-header h2 { font-size: 22px; }
+      .tool-grid { grid-template-columns: 1fr; }
+      .tool-card { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ═══ HEADER ═══ -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">
+        <img class="logo-icon" src="/favicon.ico" alt="duq-tools" onerror="this.style.display='none'">
+        <div class="logo-text">
+          <h1>duq-tools</h1>
+          <span>Game Dev Toolkit</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span class="version-badge">v1.0</span>
+    </div>
+  </header>
+
+  <!-- ═══ TAB BAR ═══ -->
+  <div class="tab-bar" id="tabBar">
+    <button class="tab-btn home-tab active" data-tab="home" onclick="switchTab('home')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      Home
+    </button>
+  </div>
+
+  <!-- ═══ TAB CONTENT ═══ -->
+  <div class="tab-content" id="tabContent">
+    <!-- Home panel -->
+    <div class="tab-panel active" data-panel="home">
+      <div class="homepage">
+        <div class="homepage-header">
+          <img class="hero-icon" src="/favicon.ico" alt="duq-tools" onerror="this.style.display='none'">
+          <h2>Welcome to duq-tools</h2>
+          <p>Choose a tool below to start creating assets for your 2D games. Each tool opens in its own tab — switch freely without losing your work.</p>
+        </div>
+        <div class="tool-grid">
+          {% for tool in tools %}
+          <div class="tool-card" onclick="openTool('{{ tool.id }}')"
+               style="--card-accent: {{ tool.color }}">
+            <img class="tool-card-icon" src="{{ tool.icon }}" alt="{{ tool.name }}"
+                 onerror="this.outerHTML='<div class=\\'tool-card-icon\\' style=\\'width:48px;height:48px;border-radius:12px;background:{{ tool.color }};opacity:0.3\\'></div>'">
+            <h3>{{ tool.name }}</h3>
+            <p>{{ tool.description }}</p>
+            <span class="tool-badge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+              Open {{ tool.name }}
+            </span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ STATUS BAR ═══ -->
+  <div class="status-bar">
+    <div class="status-left">
+      <span class="status-indicator">
+        <span class="status-dot"></span>
+        Server running
+      </span>
+      <span id="activeToolName">Home</span>
+    </div>
+    <div class="status-right">
+      <span>duq-tools v1.0</span>
+      <a class="status-link" href="https://github.com/duqtools/duq-tools" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ═════════════════════════════════════════════════════════
+  //  TAB STATE
+  // ═════════════════════════════════════════════════════════
+  const MAX_TABS = 3;  // one per tool max
+
+  // Track which tools have open tabs
+  const openTabs = new Map(); // toolId -> { title, icon, color }
+
+  // ═════════════════════════════════════════════════════════
+  //  SWITCH TAB
+  // ═════════════════════════════════════════════════════════
+  function switchTab(tabId) {
+    // Update tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tabId);
+    });
+
+    // Update panels
+    document.querySelectorAll('.tab-panel').forEach(panel => {
+      panel.classList.toggle('active', panel.dataset.panel === tabId);
+    });
+
+    // Update status bar
+    const nameEl = document.getElementById('activeToolName');
+    if (tabId === 'home') {
+      nameEl.textContent = 'Home';
+    } else {
+      const tab = openTabs.get(tabId);
+      nameEl.textContent = tab ? tab.title : tabId;
+    }
+  }
+
+  // ═════════════════════════════════════════════════════════
+  //  OPEN TOOL
+  // ═════════════════════════════════════════════════════════
+  function openTool(toolId) {
+    // If already open, just switch to it
+    if (document.querySelector(`.tab-panel[data-panel="${toolId}"]`)) {
+      switchTab(toolId);
+      return;
+    }
+
+    // Check max tabs
+    if (openTabs.size >= MAX_TABS) {
+      // Replace the oldest tool tab
+      const firstId = openTabs.keys().next().value;
+      closeTab(firstId);
+    }
+
+    // Fetch tool metadata from the dataset
+    const card = document.querySelector(`.tool-card[onclick*="${toolId}"]`);
+    const title = card ? card.querySelector('h3').textContent : toolId;
+    const icon = card ? card.querySelector('.tool-card-icon').src : '';
+    const color = card ? card.style.getPropertyValue('--card-accent').trim() : '#5b7aff';
+
+    // Store tab info
+    openTabs.set(toolId, { title, icon, color });
+
+    // Add tab button (insert before the first tab button which is Home)
+    const tabBar = document.getElementById('tabBar');
+    const homeBtn = tabBar.querySelector('.home-tab');
+
+    const tabBtn = document.createElement('button');
+    tabBtn.className = 'tab-btn';
+    tabBtn.dataset.tab = toolId;
+    tabBtn.innerHTML = `
+      <img class="tab-icon" src="${icon}" alt="" onerror="this.outerHTML='<span class=\\'tab-icon\\' style=\\'width:16px;height:16px;border-radius:3px;background:${color};display:inline-block\\'></span>'">
+      ${title}
+      <span class="tab-close" onclick="event.stopPropagation(); closeTab('${toolId}')">✕</span>
+    `;
+    tabBtn.onclick = () => switchTab(toolId);
+    tabBar.insertBefore(tabBtn, homeBtn.nextSibling);
+
+    // Add iframe panel
+    const content = document.getElementById('tabContent');
+
+    const panel = document.createElement('div');
+    panel.className = 'tab-panel';
+    panel.dataset.panel = toolId;
+
+    const iframe = document.createElement('iframe');
+    iframe.src = `/${toolId}/`;
+    iframe.loading = 'lazy';
+    iframe.title = title;
+    panel.appendChild(iframe);
+
+    content.appendChild(panel);
+
+    // Switch to the new tab
+    switchTab(toolId);
+  }
+
+  // ═════════════════════════════════════════════════════════
+  //  CLOSE TAB
+  // ═════════════════════════════════════════════════════════
+  function closeTab(toolId) {
+    if (toolId === 'home') return;
+
+    // Remove tab button
+    const tabBtn = document.querySelector(`.tab-btn[data-tab="${toolId}"]`);
+    if (tabBtn) tabBtn.remove();
+
+    // Remove panel
+    const panel = document.querySelector(`.tab-panel[data-panel="${toolId}"]`);
+    if (panel) panel.remove();
+
+    // Remove from state
+    openTabs.delete(toolId);
+
+    // If the closed tab was active, switch to home
+    const activePanel = document.querySelector('.tab-panel.active');
+    if (!activePanel || activePanel.dataset.panel === toolId) {
+      switchTab('home');
+    }
+  }
+
+  // ═════════════════════════════════════════════════════════
+  //  KEYBOARD SHORTCUTS
+  // ═════════════════════════════════════════════════════════
+  document.addEventListener('keydown', (e) => {
+    // Ctrl+W or Cmd+W — close active tab
+    if ((e.ctrlKey || e.metaKey) && e.key === 'w') {
+      e.preventDefault();
+      const activePanel = document.querySelector('.tab-panel.active');
+      if (activePanel && activePanel.dataset.panel !== 'home') {
+        closeTab(activePanel.dataset.panel);
+      }
+    }
+  });
+
+  // ═════════════════════════════════════════════════════════
+  //  PERSISTENCE — save/restore tabs across page reloads
+  // ═════════════════════════════════════════════════════════
+  const STORAGE_KEY_TABS = 'duq_tabs';
+
+  function saveTabState() {
+    const tabs = Array.from(openTabs.keys());
+    const activePanel = document.querySelector('.tab-panel.active');
+    const active = activePanel ? activePanel.dataset.panel : 'home';
+    try {
+      localStorage.setItem(STORAGE_KEY_TABS, JSON.stringify({ tabs, active }));
+    } catch (e) { /* ignore quota errors */ }
+  }
+
+  function restoreTabState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_TABS);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (!Array.isArray(data.tabs)) return;
+      // Re-open all saved tabs sequentially
+      data.tabs.forEach(function(toolId) {
+        if (!openTabs.has(toolId) && toolId !== 'home') {
+          openTool(toolId);
+        }
+      });
+      // Restore active tab after a short delay for iframes to settle
+      if (data.active && data.active !== 'home') {
+        setTimeout(function() { switchTab(data.active); }, 100);
+      }
+    } catch (e) { /* ignore parse errors */ }
+  }
+
+  // Persist state on tab open/close
+  const _origOpenTool = openTool;
+  openTool = function(toolId) {
+    _origOpenTool(toolId);
+    saveTabState();
+  };
+
+  const _origCloseTab = closeTab;
+  closeTab = function(toolId) {
+    _origCloseTab(toolId);
+    saveTabState();
+  };
+
+  // Restore tabs on page load (DOM is ready since script is at end of body)
+  restoreTabState();
+</script>
+</body>
+</html>
