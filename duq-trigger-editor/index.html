@@ -4499,6 +4499,33 @@ console.log('⚡ Duq Trigger Editor — Trigger Script Editor v1.0');
 console.log('Created by Mence');
 console.log('Events:', EVENT_TYPES.size, '| Conditions:', CONDITION_TYPES.size, '| Actions:', ACTION_TYPES.size);
 syncEditor();
+
+// ─── Persistence: auto-save/restore editor content ──────
+</script>
+<script src="/static/persist.js"></script>
+<script>
+(function() {
+  var KEY = 'trigger_editor_state';
+  if (window.duqPersist) {
+    var saved = window.duqPersist.load(KEY, null);
+    if (saved && saved.text) {
+      setTimeout(function() {
+        codeInput.value = saved.text;
+        syncEditor();
+      }, 100);
+    }
+    // Debounced auto-save on input
+    var saveTimer = null;
+    var origInput = codeInput.addEventListener;
+    codeInput.addEventListener('input', function() {
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(function() {
+        window.duqPersist.save(KEY, { text: codeInput.value });
+        saveTimer = null;
+      }, 600);
+    });
+  }
+})();
 </script>
 </body>
 </html>

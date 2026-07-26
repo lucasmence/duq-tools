@@ -160,5 +160,80 @@
   </template>
 
   <script src="script.js"></script>
+  <!-- Persistence: auto-save/restore image list -->
+  <script src="/static/persist.js"></script>
+  <script>
+    (function() {
+      var KEY = 'sprite_fusion_state';
+
+      // Restore state on load
+      var saved = window.duqPersist.load(KEY, null);
+      if (saved && saved.images && saved.images.length > 0) {
+        var _tryRestore = function() {
+          if (typeof addImages === 'function' && typeof showToast === 'function') {
+            // Convert stored data back to File-like objects
+            saved.images.forEach(function(imgData) {
+              if (imgData.dataUrl) {
+                var img = new Image();
+                img.onload = function() {
+                  state.images.push({
+                    id: 'restored-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6),
+                    dataUrl: imgData.dataUrl,
+                    element: img,
+                    name: imgData.name || 'restored.png',
+                    width: img.naturalWidth,
+                    height: img.naturalHeight,
+                    size: imgData.size || 0,
+                    timestamp: Date.now(),
+                  });
+                  renderList();
+                  updateUI();
+                };
+                img.src = imgData.dataUrl;
+              }
+            });
+            showToast('Restored ' + saved.images.length + ' image(s) from previous session', 'info');
+          } else {
+            setTimeout(_tryRestore, 200);
+          }
+        };
+        setTimeout(_tryRestore, 600);
+      }
+
+      // Auto-save on state change (debounced)
+      var saveState = window.duqPersist.debounce(function() {
+        if (state && state.images) {
+          try {
+            var data = state.images.map(function(img) {
+              return {
+                dataUrl: img.dataUrl,
+                name: img.name,
+                width: img.width,
+                height: img.height,
+                size: img.size,
+              };
+            });
+            window.duqPersist.save(KEY, { images: data });
+          } catch(e) { /* ignore */ }
+        }
+      }, 1000);
+
+      // Hook into existing render/update functions via wrapping
+      var _origRenderList = renderList;
+      if (typeof renderList === 'function') {
+        renderList = function() {
+          _origRenderList();
+          saveState();
+        };
+      }
+      var _origUpdateUI = updateUI;
+      if (typeof updateUI === 'function') {
+        updateUI = function() {
+          _origUpdateUI();
+          saveState();
+        };
+      }
+    })();
+  </script>
 </body>
 </html>
