@@ -161,7 +161,7 @@ def _generate_self_signed_cert() -> bool:
         print(f"  ℹ️  Using existing certificate: {CERT_FILE}")
         return True
 
-    print(f"  🔐 Generating self-signed SSL certificate...")
+    print("  🔐 Generating self-signed SSL certificate...")
 
     # OpenSSL subject
     subject = "/C=BR/ST=Local/L=Dev/O=duq-tools/CN=localhost"
@@ -184,15 +184,15 @@ def _generate_self_signed_cert() -> bool:
         subprocess.run(cmd, check=True, capture_output=True, text=True)
         print(f"  ✅ Certificate generated: {CERT_FILE}")
         print(f"  ✅ Private key generated:  {KEY_FILE}")
-        print(f"  ⚠️  This is a self-signed cert — your browser will show a")
-        print(f"     security warning. This is normal for local development.")
-        print(f"     You can safely proceed (click 'Advanced' → 'Proceed').")
+        print("  ⚠️  This is a self-signed cert — your browser will show a")
+        print("     security warning. This is normal for local development.")
+        print("     You can safely proceed (click 'Advanced' → 'Proceed').")
     except subprocess.CalledProcessError as e:
         print(f"  ❌ Failed to generate certificate: {e.stderr}")
-        print(f"  ℹ️  Falling back to HTTP.")
+        print("  ℹ️  Falling back to HTTP.")
         return False
     except FileNotFoundError:
-        print(f"  ❌ OpenSSL not found. Please install openssl or use HTTP.")
+        print("  ❌ OpenSSL not found. Please install openssl or use HTTP.")
         return False
 
     return True
@@ -263,20 +263,20 @@ def main():
 
     # If we wanted HTTPS but cert generation failed, fall back gracefully
     if use_https and ssl_context is None:
-        print(f"  ⚠️  HTTPS requested but certificate unavailable — falling back to HTTP")
+        print("  ⚠️  HTTPS requested but certificate unavailable — falling back to HTTP")
         protocol = "http"
 
-    print(f"╔══════════════════════════════════════════════╗")
-    print(f"║         🎮  duq-tools  Web Server           ║")
-    print(f"╠══════════════════════════════════════════════╣")
-    print(f"║  Sprite Editor   → /sprite-editor           ║")
-    print(f"║  Sprite Fusion   → /sprite-fusion           ║")
-    print(f"║  Trigger Editor  → /trigger-editor          ║")
-    print(f"╠══════════════════════════════════════════════╣")
+    print("╔══════════════════════════════════════════════╗")
+    print("║         🎮  duq-tools  Web Server           ║")
+    print("╠══════════════════════════════════════════════╣")
+    print("║  Sprite Editor   → /sprite-editor           ║")
+    print("║  Sprite Fusion   → /sprite-fusion           ║")
+    print("║  Trigger Editor  → /trigger-editor          ║")
+    print("╠══════════════════════════════════════════════╣")
     print(f"║  Open {protocol}://{host if host != '0.0.0.0' else 'localhost'}:{port}  ║")
     if use_https and ssl_context:
-        print(f"║  🔒 HTTPS with self-signed certificate       ║")
-    print(f"╚══════════════════════════════════════════════╝")
+        print("║  🔒 HTTPS with self-signed certificate       ║")
+    print("╚══════════════════════════════════════════════╝")
 
     app.run(host=host, port=port, debug=debug, ssl_context=ssl_context)
 

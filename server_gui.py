@@ -9,8 +9,6 @@ Build with PyInstaller using:
     pyinstaller build_gui.spec --noconfirm --clean
 """
 
-import sys
-import os
 import threading
 import time
 import webbrowser
@@ -32,7 +30,7 @@ def main():
     args = parse_args()
     host = args.host
     port = args.port
-    debug = args.debug
+    _debug = args.debug
     use_https = args.https
 
     protocol = "https" if use_https else "http"

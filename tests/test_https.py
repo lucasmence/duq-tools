@@ -173,7 +173,7 @@ class TestGetSSLContext:
         temp_certs_dir["cert"].write_text("cert")
         temp_certs_dir["key"].write_text("key")
 
-        with patch("server._generate_self_signed_cert", return_value=True) as mock_gen:
+        with patch("server._generate_self_signed_cert", return_value=True) as _mock_gen:
             ctx = server._get_ssl_context()
             assert ctx is not None
             assert isinstance(ctx, tuple)

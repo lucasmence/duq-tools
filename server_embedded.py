@@ -12,8 +12,6 @@ Build with PyInstaller using:
     pyinstaller build_embedded.spec --noconfirm --clean
 """
 
-import sys
-import os
 import threading
 import time
 
@@ -66,7 +64,7 @@ def main():
     _wait_for_server(display_host, port)
 
     # ── Create native desktop window with embedded browser ──────────
-    window = webview.create_window(
+    _ = webview.create_window(
         title="duq-tools",
         url=url,                  # Pass URL string — respects CLI args
         width=1280,

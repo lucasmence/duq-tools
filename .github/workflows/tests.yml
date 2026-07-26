@@ -4,6 +4,32 @@ on:
   pull_request:
 
 jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  #  LINT  —  Check code quality with ruff
+  # ─────────────────────────────────────────────────────────────────────────────
+  lint:
+    name: Run ruff lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff
+
+      - name: Run ruff check
+        run: ruff check .
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  #  TEST  —  Run the pytest suite
+  # ─────────────────────────────────────────────────────────────────────────────
   test:
     name: Run pytest
     runs-on: ubuntu-latest
