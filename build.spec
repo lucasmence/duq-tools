@@ -30,19 +30,27 @@ DATA_DIRS = [
 # Build datas list using Tree for recursive inclusion
 datas = []
 for src, dst in DATA_DIRS:
-    src_path = Path(__file__).parent / src
+    src_path = Path.cwd() / src
     if src_path.is_dir():
         datas.append((str(src_path), dst))
 
-# Also include icon.png at the root
-icon_src = Path(__file__).parent / "icon.png"
-if icon_src.exists():
-    datas.append((str(icon_src), "."))
+# Also include icon files at the root
+icon_png = Path.cwd() / "icon.png"
+if icon_png.exists():
+    datas.append((str(icon_png), "."))
+
+icon_ico = Path.cwd() / "icon.ico"
+if icon_ico.exists():
+    datas.append((str(icon_ico), "."))
+
+# Determine which icon to use for the executable
+# Windows .ico is preferred, fall back to .png
+icon_exe = icon_ico if icon_ico.exists() else icon_png
 
 # ── Analysis ─────────────────────────────────────────────────────────
 a = Analysis(
     ["server.py"],
-    pathex=[str(Path(__file__).parent)],
+    pathex=[str(Path.cwd())],
     binaries=[],
     datas=datas,
     hiddenimports=[
@@ -104,5 +112,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=str(icon_src) if icon_src.exists() else None,
+    icon=str(icon_exe) if icon_exe.exists() else None,
 )
