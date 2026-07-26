@@ -105,6 +105,23 @@ def favicon():
     abort(404)
 
 
+# ── Service Worker ────────────────────────────────────────────────────
+@app.route("/sw.js")
+def service_worker():
+    """Serve the Service Worker from the static directory.
+    Must be served from the root scope so it can control all pages."""
+    sw_path = BASE_DIR / "static" / "sw.js"
+    if sw_path.exists():
+        response = send_from_directory(
+            str(BASE_DIR / "static"), "sw.js"
+        )
+        response.headers["Service-Worker-Allowed"] = "/"
+        response.headers["Cache-Control"] = "no-cache"
+        response.content_type = "application/javascript"
+        return response
+    abort(404)
+
+
 # ── SSL / HTTPS helpers ───────────────────────────────────────────────
 
 CERT_DIR = BASE_DIR / "certs"
