@@ -74,7 +74,6 @@ a = Analysis(
         "tkinter",
         "unittest",
         "pytest",
-        "email",
         "http.cookiejar",
         "http.cookies",
         "xml.etree",
