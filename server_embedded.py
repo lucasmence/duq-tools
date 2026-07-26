@@ -21,15 +21,15 @@ import time
 from server import app, parse_args
 
 
-def _wait_for_server(url: str, timeout: float = 5.0) -> bool:
-    """Wait until the server is reachable at the given URL."""
-    import urllib.request
+def _wait_for_server(host: str, port: int, timeout: float = 5.0) -> bool:
+    """Wait until the server is listening on the given host:port."""
+    import socket
     start = time.time()
     while time.time() - start < timeout:
         try:
-            urllib.request.urlopen(url, timeout=0.5)
-            return True
-        except (urllib.error.URLError, ConnectionError):
+            with socket.create_connection((host, port), timeout=0.5):
+                return True
+        except (ConnectionRefusedError, OSError):
             time.sleep(0.1)
     return False
 
@@ -63,7 +63,7 @@ def main():
     thread.start()
 
     # ── Wait for server to be ready ─────────────────────────────────
-    _wait_for_server(url)
+    _wait_for_server(display_host, port)
 
     # ── Create native desktop window with embedded browser ──────────
     window = webview.create_window(
