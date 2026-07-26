@@ -1,4 +1,4 @@
-# 🎮 duq-tools
+#  duq-tools
 
 [![Docker Build & Test](https://github.com/duqtools/duq-tools/actions/workflows/docker.yml/badge.svg)](https://github.com/duqtools/duq-tools/actions/workflows/docker.yml)
 [![Tests](https://github.com/duqtools/duq-tools/actions/workflows/tests.yml/badge.svg)](https://github.com/duqtools/duq-tools/actions/workflows/tests.yml)
@@ -9,11 +9,11 @@
 
 | Tool | Description |
 |------|-------------|
-| 🎨 **Sprite Editor** | Create and edit 2D sprite textures & animations |
-| 🔀 **Sprite Fusion** | Merge multiple PNG sprites into a single spritesheet |
-| ⚡ **Trigger Editor** | Define map triggers, events, conditions and actions |
+| **Sprite Editor** | Create and edit 2D sprite textures & animations |
+| **Sprite Fusion** | Merge multiple PNG sprites into a single spritesheet |
+| **Trigger Editor** | Define map triggers, events, conditions and actions |
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 # Install dependencies
@@ -28,7 +28,7 @@ python3 server.py --https
 
 Then open **http://localhost:5000** in your browser.
 
-## 🐳 Docker
+## Docker
 
 ```bash
 # Build and run with Docker Compose
@@ -39,7 +39,7 @@ docker build -t duq-tools .
 docker run -p 5000:5000 duq-tools
 ```
 
-## 🔒 HTTPS
+## HTTPS
 
 ```bash
 # Auto-generates a self-signed SSL certificate
