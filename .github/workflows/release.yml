@@ -29,7 +29,7 @@ jobs:
         run: python -m pytest tests/ -v --tb=short
 
   # ─────────────────────────────────────────────────────────────────────────────
-  #  WINDOWS BUILD  —  Create duq-tools.exe (console) + duq-tools-gui.exe (windowed)
+  #  WINDOWS BUILD  —  Create all Windows executables
   # ─────────────────────────────────────────────────────────────────────────────
   windows:
     name: Build Windows executables
@@ -61,6 +61,9 @@ jobs:
       - name: Build GUI version (duq-tools-gui.exe)
         run: pyinstaller build_gui.spec --noconfirm --clean
 
+      - name: Build desktop version with embedded browser (duq-tools-desktop.exe)
+        run: pyinstaller build_embedded.spec --noconfirm --clean
+
       - name: Upload executables as artifact
         uses: actions/upload-artifact@v4
         with:
@@ -68,6 +71,7 @@ jobs:
           path: |
             dist/duq-tools.exe
             dist/duq-tools-gui.exe
+            dist/duq-tools-desktop.exe
           if-no-files-found: error
           retention-days: 90
 
@@ -104,3 +108,4 @@ jobs:
           files: |
             release-artifacts/duq-tools.exe
             release-artifacts/duq-tools-gui.exe
+            release-artifacts/duq-tools-desktop.exe
