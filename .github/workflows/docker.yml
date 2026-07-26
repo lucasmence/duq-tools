@@ -44,6 +44,8 @@ jobs:
     name: Build & push Docker image
     runs-on: ubuntu-latest
     needs: [test]
+    outputs:
+      image_ref: ${{ steps.export_tag.outputs.ref }}
     # Only push to registry on pushes to main or tag creation.
     # For PRs, just build to verify the Dockerfile works.
     permissions:
@@ -99,6 +101,15 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # ── Export image reference for downstream jobs ───────────────────────
+      - name: Export first image tag
+        id: export_tag
+        shell: bash
+        run: |
+          FIRST_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -1)
+          echo "ref=${FIRST_TAG}" >> "$GITHUB_OUTPUT"
+          echo "Using image: ${FIRST_TAG}"
+
   # ─────────────────────────────────────────────────────────────────────────────
   #  TRIVY SCAN  —  Security vulnerability scan (on push only)
   # ─────────────────────────────────────────────────────────────────────────────
@@ -109,25 +120,35 @@ jobs:
     if: github.event_name != 'pull_request'
     permissions:
       contents: read
+      packages: read
       security-events: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          image-ref: ${{ needs.docker.outputs.image_ref }}
           format: sarif
           output: trivy-results.sarif
           severity: HIGH,CRITICAL
           exit-code: 1
           # Ignore unfixed vulnerabilities for now (common in slim images)
-          hide-unfixed: true
+          ignore-unfixed: true
 
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v4
-        if: always()
+        # Run even when Trivy finds vulnerabilities (exit-code 1)
+        # but skip on cancelled workflow
+        if: success() || failure()
         with:
           sarif_file: trivy-results.sarif
