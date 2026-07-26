@@ -1,0 +1,71 @@
+# ── Auto-generated release notes configuration ────────────────────────────
+# GitHub uses this file to categorize PRs into sections when you publish
+# a release. Each category maps to one or more PR labels.
+#
+# Reference: https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes#configuring-automatically-generated-release-notes
+
+changelog:
+  categories:
+    - title: 🚀 Features
+      labels:
+        - "feature"
+        - "enhancement"
+        - "feat"
+
+    - title: 🐛 Bug Fixes
+      labels:
+        - "bug"
+        - "fix"
+        - "bugfix"
+        - "hotfix"
+
+    - title: 🎨 UI / UX
+      labels:
+        - "ui"
+        - "ux"
+        - "design"
+        - "visual"
+
+    - title: 🔒 Security
+      labels:
+        - "security"
+
+    - title: ⚡ Performance
+      labels:
+        - "performance"
+        - "perf"
+        - "optimization"
+
+    - title: 📖 Documentation
+      labels:
+        - "documentation"
+        - "docs"
+        - "readme"
+
+    - title: 🧪 Testing
+      labels:
+        - "test"
+        - "testing"
+        - "tests"
+        - "coverage"
+
+    - title: 🔧 Maintenance
+      labels:
+        - "chore"
+        - "refactor"
+        - "dependencies"
+        - "github-actions"
+        - "ci"
+        - "cd"
+        - "tooling"
+        - "dependabot"
+
+    - title: 🐳 Docker
+      labels:
+        - "docker"
+        - "container"
+        - "deployment"
+
+    - title: 📦 Other Changes
+      labels:
+        - "*"
