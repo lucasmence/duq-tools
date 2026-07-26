@@ -317,29 +317,25 @@
   <input type="file" id="spritesheetInput" accept=".png,.jpg,.jpeg,.gif,.bmp,.webp" style="display:none">
   <input type="file" id="projectFileInput" accept=".duq-project,.json" style="display:none">
 
-  <!-- JSON Files Popup -->
+  <!-- JSON Files Popup (localStorage Vault) -->
   <div id="jsonFilesPopup" class="modal-overlay" style="display:none;">
-    <div class="modal modal-sm">
+    <div class="modal modal-vault">
       <div class="modal-header">
         <h2>
           <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
             <path d="M2 3h10M2 7h10M2 11h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
-          JSON in <span id="jsonPopupDir">data/textures/</span>
+          <span id="jsonPopupDir">File Vault</span>
+          <span style="font-size:11px;color:var(--text-muted);font-weight:400;margin-left:8px;">localStorage</span>
         </h2>
         <button class="modal-close" id="btnCloseJsonPopup">✕</button>
       </div>
-      <div class="modal-body">
-        <div class="json-files-list" id="jsonFilesList">
-          <div class="json-files-loading">
-            <span class="loading-spinner"></span>
-            Scanning files...
-          </div>
-        </div>
+      <div class="modal-body" style="padding:0;">
+        <div class="json-files-list" id="jsonFilesList"></div>
       </div>
       <div class="modal-footer">
         <span class="json-files-count" id="jsonFilesCount"></span>
-        <button class="btn btn-sm btn-outline" id="btnRefreshJsonFiles" title="Refresh list">
+        <button class="btn btn-sm btn-outline" id="btnRefreshJsonFiles" title="Refresh vault">
           <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
             <path d="M1 7a6 6 0 0111-3.5M13 1v3.5H9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
@@ -465,6 +461,48 @@
       }
       setTimeout(hideSplash, 2000);
       splash.addEventListener('click', hideSplash);
+    })();
+  </script>
+  <!-- Persistence: auto-save/restore editor state -->
+  <script src="/static/persist.js"></script>
+  <script>
+    (function() {
+      var KEY = 'sprite_editor_state';
+
+      // Restore state on load
+      var saved = window.duqPersist.load(KEY, null);
+      if (saved && saved.jsonData) {
+        // Wait for app.js to initialize, then load
+        var _tryLoad = function() {
+          if (typeof loadFromJSON === 'function') {
+            loadFromJSON(saved.jsonData);
+          } else {
+            setTimeout(_tryLoad, 100);
+          }
+        };
+        setTimeout(_tryLoad, 500);
+      }
+
+      // Auto-save on any input change (debounced)
+      var saveState = window.duqPersist.debounce(function() {
+        if (typeof buildJSON === 'function') {
+          try {
+            var data = buildJSON();
+            window.duqPersist.save(KEY, { jsonData: data });
+          } catch(e) { /* ignore during init */ }
+        }
+      }, 800);
+
+      // Listen to all form inputs
+      document.addEventListener('input', saveState);
+      document.addEventListener('change', saveState);
+
+      // Save on animation add/remove (monitor mutations)
+      var animObserver = new MutationObserver(saveState);
+      var animList = document.getElementById('animationsList');
+      if (animList) {
+        animObserver.observe(animList, { childList: true, subtree: true });
+      }
     })();
   </script>
 </body>

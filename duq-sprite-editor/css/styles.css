@@ -1128,6 +1128,13 @@ html, body {
   max-height: 70vh;
 }
 
+/* Wider modal for vault */
+.modal-vault {
+  width: 680px;
+  max-width: 95vw;
+  max-height: 80vh;
+}
+
 @keyframes modalIn {
   from { opacity: 0; transform: translateY(-8px) scale(0.97); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
@@ -1289,6 +1296,262 @@ html, body {
   padding: 30px;
   color: var(--danger);
   font-size: 13px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   LOCALSTORAGE VAULT MANAGER
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.vault-manager {
+  min-height: 200px;
+}
+
+.vault-layout {
+  display: flex;
+  height: 100%;
+  min-height: 300px;
+}
+
+.vault-sidebar {
+  width: 200px;
+  min-width: 180px;
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+}
+
+.vault-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--text-muted);
+}
+
+.vault-folder-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.vault-folder {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.1s;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.vault-folder:hover {
+  background: var(--bg-hover);
+}
+
+.vault-folder-active {
+  background: var(--accent-subtle);
+  color: var(--accent);
+}
+
+.vault-folder-active:hover {
+  background: var(--accent-subtle);
+}
+
+.vault-folder-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.vault-folder-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vault-folder-count {
+  font-size: 10px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.vault-folder-rename,
+.vault-folder-delete {
+  background: none;
+  border: none;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: all 0.1s;
+  flex-shrink: 0;
+}
+
+.vault-folder:hover .vault-folder-rename,
+.vault-folder:hover .vault-folder-delete {
+  opacity: 0.6;
+}
+
+.vault-folder-rename:hover,
+.vault-folder-delete:hover {
+  opacity: 1 !important;
+  background: var(--bg-hover);
+}
+
+.vault-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.vault-content-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.vault-current-folder {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.vault-content-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.vault-file-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.vault-empty {
+  padding: 30px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.vault-file-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.vault-file-item:hover {
+  background: var(--accent-subtle);
+}
+
+.vault-file-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+  opacity: 0.6;
+}
+
+.vault-file-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.vault-file-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vault-file-meta {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.vault-file-open,
+.vault-file-delete {
+  background: none;
+  border: none;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.1s;
+  flex-shrink: 0;
+  opacity: 0;
+}
+
+.vault-file-item:hover .vault-file-open,
+.vault-file-item:hover .vault-file-delete {
+  opacity: 1;
+}
+
+.vault-file-open {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.vault-file-open:hover {
+  background: var(--accent-subtle);
+}
+
+.vault-file-delete {
+  color: var(--danger);
+  font-size: 14px;
+}
+
+.vault-file-delete:hover {
+  background: rgba(255, 77, 106, 0.15);
+}
+
+.vault-storage-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.vault-storage-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--border-color);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.vault-storage-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+.vault-storage-text {
+  font-size: 10px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  font-family: var(--font-mono);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════

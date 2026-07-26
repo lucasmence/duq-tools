@@ -1529,6 +1529,451 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// LOCALSTORAGE FILE VAULT — Firefox-compatible file management
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// The vault stores JSON files in localStorage organized in a folder-like structure.
+// Structure: { "folders": { "folderName": true }, "files": { "folderName/filename.json": { content, createdAt, updatedAt } } }
+
+const VAULT_KEY = 'duq_sprite_vault';
+
+function _getVault() {
+  try {
+    const raw = localStorage.getItem(VAULT_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && parsed.folders && parsed.files) {
+        return parsed;
+      }
+    }
+  } catch (e) { /* ignore */ }
+  // Default vault structure
+  return { folders: { 'My Sprites': true }, files: {} };
+}
+
+function _saveVault(vault) {
+  try {
+    localStorage.setItem(VAULT_KEY, JSON.stringify(vault));
+  } catch (e) {
+    // localStorage might be full — warn user
+    showNotification('Could not save to vault. Storage may be full.', 'error');
+  }
+}
+
+// ─── Vault Folder Management ────────────────────────────────────────────────
+
+function getVaultFolders() {
+  const vault = _getVault();
+  return Object.keys(vault.folders).sort();
+}
+
+function createVaultFolder(name) {
+  name = name.trim();
+  if (!name) return false;
+  const vault = _getVault();
+  if (vault.folders[name]) return false; // Already exists
+  vault.folders[name] = true;
+  _saveVault(vault);
+  return true;
+}
+
+function deleteVaultFolder(name) {
+  const vault = _getVault();
+  if (!vault.folders[name]) return false;
+  // Delete all files in this folder
+  const prefix = name + '/';
+  Object.keys(vault.files).forEach(key => {
+    if (key.startsWith(prefix)) {
+      delete vault.files[key];
+    }
+  });
+  delete vault.folders[name];
+  _saveVault(vault);
+  return true;
+}
+
+function renameVaultFolder(oldName, newName) {
+  newName = newName.trim();
+  if (!newName || oldName === newName) return false;
+  const vault = _getVault();
+  if (!vault.folders[oldName]) return false;
+  if (vault.folders[newName]) return false; // Already exists
+
+  // Rename folder
+  delete vault.folders[oldName];
+  vault.folders[newName] = true;
+
+  // Move all files from old folder to new folder
+  const prefix = oldName + '/';
+  const filesToMove = {};
+  Object.keys(vault.files).forEach(key => {
+    if (key.startsWith(prefix)) {
+      const newKey = newName + '/' + key.slice(prefix.length);
+      filesToMove[newKey] = vault.files[key];
+      delete vault.files[key];
+    }
+  });
+  Object.assign(vault.files, filesToMove);
+
+  _saveVault(vault);
+  return true;
+}
+
+// ─── Vault File Management ──────────────────────────────────────────────────
+
+function getVaultFiles(folderName) {
+  const vault = _getVault();
+  const prefix = folderName + '/';
+  const result = [];
+  Object.keys(vault.files).forEach(key => {
+    if (key.startsWith(prefix)) {
+      const fileData = vault.files[key];
+      result.push({
+        key: key,
+        name: key.slice(prefix.length),
+        content: fileData.content,
+        createdAt: fileData.createdAt,
+        updatedAt: fileData.updatedAt,
+      });
+    }
+  });
+  // Sort by name
+  result.sort((a, b) => a.name.localeCompare(b.name));
+  return result;
+}
+
+function getAllVaultFiles() {
+  const vault = _getVault();
+  const result = [];
+  Object.keys(vault.files).forEach(key => {
+    const fileData = vault.files[key];
+    const slashIdx = key.indexOf('/');
+    const folder = slashIdx > -1 ? key.slice(0, slashIdx) : '';
+    const name = slashIdx > -1 ? key.slice(slashIdx + 1) : key;
+    result.push({
+      key: key,
+      folder: folder,
+      name: name,
+      content: fileData.content,
+      createdAt: fileData.createdAt,
+      updatedAt: fileData.updatedAt,
+    });
+  });
+  result.sort((a, b) => a.folder.localeCompare(b.folder) || a.name.localeCompare(b.name));
+  return result;
+}
+
+function saveJsonToVault(folderName, fileName, jsonContent) {
+  const vault = _getVault();
+  if (!vault.folders[folderName]) return false;
+  const key = folderName + '/' + fileName;
+  const now = new Date().toISOString();
+  if (vault.files[key]) {
+    vault.files[key].content = jsonContent;
+    vault.files[key].updatedAt = now;
+  } else {
+    vault.files[key] = {
+      content: jsonContent,
+      createdAt: now,
+      updatedAt: now,
+    };
+  }
+  _saveVault(vault);
+  return true;
+}
+
+function loadJsonFromVault(key) {
+  const vault = _getVault();
+  const fileData = vault.files[key];
+  if (!fileData) return null;
+  return fileData.content;
+}
+
+function deleteVaultFile(key) {
+  const vault = _getVault();
+  if (!vault.files[key]) return false;
+  delete vault.files[key];
+  _saveVault(vault);
+  return true;
+}
+
+function getVaultStorageInfo() {
+  // Estimate storage usage
+  try {
+    const raw = localStorage.getItem(VAULT_KEY) || '{}';
+    const bytes = new Blob([raw]).size;
+    const limit = 5 * 1024 * 1024; // ~5MB typical localStorage limit
+    return { used: bytes, limit: limit, percent: Math.round((bytes / limit) * 100) };
+  } catch (e) {
+    return { used: 0, limit: 5242880, percent: 0 };
+  }
+}
+
+// ─── Render Vault Manager UI ─────────────────────────────────────────────────
+
+function renderVaultManager() {
+  const container = $('vaultManager');
+  if (!container) return;
+  
+  const folders = getVaultFolders();
+  const selectedFolder = container.dataset.selectedFolder || folders[0] || '';
+  
+  let html = '<div class="vault-layout">';
+  
+  // Left sidebar: folder list
+  html += '<div class="vault-sidebar">';
+  html += '<div class="vault-sidebar-header">';
+  html += '<span>Folders</span>';
+  html += '<button class="btn btn-sm btn-outline" id="btnVaultNewFolder" title="New folder">+</button>';
+  html += '</div>';
+  html += '<div class="vault-folder-list">';
+  
+  if (folders.length === 0) {
+    html += '<div class="vault-empty">No folders. Create one!</div>';
+  } else {
+    folders.forEach(f => {
+      const active = f === selectedFolder ? ' vault-folder-active' : '';
+      html += `<div class="vault-folder${active}" data-folder="${escapeHtml(f)}">`;
+      html += `<span class="vault-folder-icon">📁</span>`;
+      html += `<span class="vault-folder-name">${escapeHtml(f)}</span>`;
+      html += `<span class="vault-folder-count">(${getVaultFiles(f).length})</span>`;
+      html += `<button class="vault-folder-rename" title="Rename folder">✏️</button>`;
+      html += `<button class="vault-folder-delete" title="Delete folder">🗑️</button>`;
+      html += '</div>';
+    });
+  }
+  
+  html += '</div>'; // .vault-folder-list
+  html += '</div>'; // .vault-sidebar
+  
+  // Right side: file list for selected folder
+  html += '<div class="vault-content">';
+  html += '<div class="vault-content-header">';
+  html += `<span class="vault-current-folder">${escapeHtml(selectedFolder)}</span>`;
+  html += '<div class="vault-content-actions">';
+  html += '<button class="btn btn-sm btn-outline" id="btnVaultImportFile" title="Import JSON file from computer">📥 Import</button>';
+  html += '<button class="btn btn-sm btn-outline" id="btnVaultSaveCurrent" title="Save current editor state to vault">💾 Save Current</button>';
+  html += '</div>';
+  html += '</div>';
+  
+  const files = getVaultFiles(selectedFolder);
+  html += '<div class="vault-file-list">';
+  
+  if (files.length === 0) {
+    html += '<div class="vault-empty">No files in this folder.</div>';
+  } else {
+    files.forEach(file => {
+      const date = new Date(file.updatedAt);
+      const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      html += `<div class="vault-file-item" data-key="${escapeHtml(file.key)}">`;
+      html += `<span class="vault-file-icon">📄</span>`;
+      html += '<div class="vault-file-info">';
+      html += `<span class="vault-file-name">${escapeHtml(file.name)}</span>`;
+      html += `<span class="vault-file-meta">${dateStr}</span>`;
+      html += '</div>';
+      html += `<button class="vault-file-open" title="Open this file">▶ Open</button>`;
+      html += `<button class="vault-file-delete" title="Delete">🗑️</button>`;
+      html += '</div>';
+    });
+  }
+  
+  html += '</div>'; // .vault-file-list
+  
+  // Storage info
+  const info = getVaultStorageInfo();
+  const barColor = info.percent > 80 ? 'var(--danger)' : info.percent > 50 ? 'var(--warning)' : 'var(--accent)';
+  html += '<div class="vault-storage-info">';
+  html += `<div class="vault-storage-bar"><div class="vault-storage-fill" style="width:${info.percent}%;background:${barColor}"></div></div>`;
+  html += `<span class="vault-storage-text">${formatFileSize(info.used)} / ${formatFileSize(info.limit)}</span>`;
+  html += '</div>';
+  
+  html += '</div>'; // .vault-content
+  html += '</div>'; // .vault-layout
+  
+  container.innerHTML = html;
+  container.dataset.selectedFolder = selectedFolder;
+  
+  // Wire up events
+  _wireVaultEvents();
+}
+
+function _wireVaultEvents() {
+  // Folder selection
+  document.querySelectorAll('.vault-folder').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.vault-folder-rename') || e.target.closest('.vault-folder-delete')) return;
+      const container = $('vaultManager');
+      container.dataset.selectedFolder = el.dataset.folder;
+      renderVaultManager();
+    });
+  });
+
+  // New folder
+  const btnNew = $('btnVaultNewFolder');
+  if (btnNew) {
+    btnNew.addEventListener('click', async () => {
+      const name = prompt('Enter folder name:');
+      if (name && name.trim()) {
+        if (createVaultFolder(name.trim())) {
+          const container = $('vaultManager');
+          container.dataset.selectedFolder = name.trim();
+          renderVaultManager();
+        } else {
+          alert('Folder already exists or invalid name.');
+        }
+      }
+    });
+  }
+
+  // Rename folder
+  document.querySelectorAll('.vault-folder-rename').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const folderEl = btn.closest('.vault-folder');
+      const oldName = folderEl.dataset.folder;
+      const newName = prompt('Rename folder to:', oldName);
+      if (newName && newName.trim() && newName.trim() !== oldName) {
+        if (renameVaultFolder(oldName, newName.trim())) {
+          const container = $('vaultManager');
+          container.dataset.selectedFolder = newName.trim();
+          renderVaultManager();
+        } else {
+          alert('Could not rename folder.');
+        }
+      }
+    });
+  });
+
+  // Delete folder
+  document.querySelectorAll('.vault-folder-delete').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const folderEl = btn.closest('.vault-folder');
+      const folderName = folderEl.dataset.folder;
+      const confirmed = await showConfirmDialog({
+        html: `Delete folder "<strong>${escapeHtml(folderName)}</strong>" and all files inside?`
+      });
+      if (confirmed) {
+        deleteVaultFolder(folderName);
+        const container = $('vaultManager');
+        const folders = getVaultFolders();
+        container.dataset.selectedFolder = folders[0] || '';
+        renderVaultManager();
+      }
+    });
+  });
+
+  // Open file
+  document.querySelectorAll('.vault-file-open').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const fileItem = this.closest('.vault-file-item');
+      const key = fileItem.dataset.key;
+      const jsonContent = loadJsonFromVault(key);
+      if (jsonContent) {
+        try {
+          const data = JSON.parse(jsonContent);
+          loadFromJSON(data);
+          showNotification('Loaded: ' + key, 'success');
+          // Close the JSON files popup
+          const popup = $('jsonFilesPopup');
+          if (popup) popup.style.display = 'none';
+        } catch (err) {
+          alert('Error parsing JSON: ' + err.message);
+        }
+      }
+    });
+  });
+
+  // Delete file
+  document.querySelectorAll('.vault-file-delete').forEach(btn => {
+    btn.addEventListener('click', async function(e) {
+      e.stopPropagation();
+      const fileItem = this.closest('.vault-file-item');
+      const key = fileItem.dataset.key;
+      const confirmed = await showConfirmDialog({
+        html: `Delete "<strong>${escapeHtml(key)}</strong>"?`
+      });
+      if (confirmed) {
+        deleteVaultFile(key);
+        renderVaultManager();
+      }
+    });
+  });
+
+  // Import file
+  const btnImport = $('btnVaultImportFile');
+  if (btnImport) {
+    btnImport.addEventListener('click', () => {
+      // Create a hidden file input
+      let importInput = $('vaultImportInput');
+      if (!importInput) {
+        importInput = document.createElement('input');
+        importInput.type = 'file';
+        importInput.id = 'vaultImportInput';
+        importInput.accept = '.json';
+        importInput.style.display = 'none';
+        document.body.appendChild(importInput);
+      }
+      importInput.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const container = $('vaultManager');
+        const folder = container.dataset.selectedFolder || 'My Sprites';
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          const content = ev.target.result;
+          // Validate it's valid JSON
+          try {
+            JSON.parse(content);
+          } catch (err) {
+            alert('Invalid JSON file: ' + err.message);
+            return;
+          }
+          // Use original filename or prompt
+          let fileName = file.name;
+          if (!fileName.endsWith('.json')) fileName += '.json';
+          saveJsonToVault(folder, fileName, content);
+          renderVaultManager();
+          showNotification('Imported: ' + fileName, 'success');
+        };
+        reader.readAsText(file);
+        this.value = '';
+      };
+      importInput.click();
+    });
+  }
+
+  // Save current
+  const btnSaveCurrent = $('btnVaultSaveCurrent');
+  if (btnSaveCurrent) {
+    btnSaveCurrent.addEventListener('click', () => {
+      syncAllAnimations();
+      const data = buildJSON();
+      if (!data.texturename) {
+        alert('Set a texture name before saving.');
+        return;
+      }
+      const container = $('vaultManager');
+      const folder = container.dataset.selectedFolder || 'My Sprites';
+      const fileName = (data.texturename || 'sprite').replace(/[\/\\]/g, '_') + '.json';
+      const jsonContent = JSON.stringify(data, null, 4);
+      
+      saveJsonToVault(folder, fileName, jsonContent);
+      renderVaultManager();
+      showNotification('Saved to vault: ' + folder + '/' + fileName, 'success');
+    });
+  }
+}
+
+// ─── Format file size helper ─────────────────────────────────────────────────
+function formatFileSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // PROJECT & PREFERENCES DROPDOWN MENU
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -1704,7 +2149,9 @@ function getProjectDisplayPath() {
 async function setupProjectDirectory() {
   try {
     if (!('showDirectoryPicker' in window)) {
-      alert('Your browser does not support the folder selection API. Please use an updated Chrome or Edge.');
+      // Firefox / unsupported browser — use localStorage vault instead
+      showNotification('Folder selection not supported in this browser. Use the "Project JSON Files" vault (⚙️ > Project JSON Files) to manage files in localStorage.', 'success');
+      openJsonFilesPopup();
       return;
     }
     projectDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
@@ -2082,8 +2529,13 @@ function showDropdown() {
     dropdown.classList.add('required');
   }
 
-  // Silently update JSON file count badge
-  scanJsonFiles().catch(() => {});
+  // Silently update JSON file count badge from vault
+  try {
+    const allFiles = getAllVaultFiles();
+    if (allFiles.length > 0) {
+      menuEl.jsonBadge.textContent = String(allFiles.length);
+    }
+  } catch (e) { /* ignore */ }
 }
 
 function closeDropdown() {
@@ -2159,95 +2611,31 @@ if (projectPathInput) {
   });
 }
 
-// ─── JSON Files Popup Logic ──────────────────────────────────────────────────
+// ─── JSON Files Popup Logic (localStorage Vault) ─────────────────────────────
+// This uses the localStorage vault instead of File System Access API,
+// making it compatible with Firefox and all browsers.
 
-async function scanJsonFiles() {
-  const texturesDir = await getTexturesDirHandle();
-  if (!texturesDir) {
-    jsonFilesList.innerHTML = '<div class="json-files-error">❌ Set the project directory first.</div>';
-    jsonFilesCount.textContent = '—';
-    menuEl.jsonBadge.textContent = '';
-    return [];
-  }
-
-  const files = [];
-  try {
-    for await (const [name, handle] of texturesDir.entries()) {
-      if (handle.kind === 'file' && name.endsWith('.json')) {
-        files.push({ name, handle });
-      }
-    }
-  } catch (err) {
-    console.warn('Error scanning data/textures:', err);
-  }
-
-  // Sort by name
-  files.sort((a, b) => a.name.localeCompare(b.name, 'en-US'));
-
-  // Update badge
-  if (files.length > 0) {
-    menuEl.jsonBadge.textContent = String(files.length);
-  } else {
-    menuEl.jsonBadge.textContent = '';
-  }
-
-  return files;
-}
-
-async function openJsonFilesPopup() {
+function openJsonFilesPopup() {
   closeDropdown();
 
   // Show popup
   jsonPopup.style.display = 'flex';
-  jsonPopupDir.textContent = (projectDirHandle ? projectDirHandle.name + '/' : '') + 'data/textures/';
+  jsonPopupDir.textContent = 'localStorage Vault';
 
-  // Show loading
-  jsonFilesList.innerHTML = '<div class="json-files-loading">'
-    + '<span class="loading-spinner"></span> Scanning files...</div>';
-  jsonFilesCount.textContent = '...';
+  // Render the vault manager inside the popup
+  jsonFilesList.innerHTML = '<div id="vaultManager" class="vault-manager"></div>';
+  jsonFilesCount.textContent = '';
 
-  // Scan
-  const files = await scanJsonFiles();
+  // Render vault
+  renderVaultManager();
 
-  if (files.length === 0) {
-    jsonFilesList.innerHTML = '<div class="json-files-empty">No .json files found in data/textures/.</div>';
-    jsonFilesCount.textContent = '0 files';
-    return;
+  // Update badge
+  const allFiles = getAllVaultFiles();
+  if (allFiles.length > 0) {
+    menuEl.jsonBadge.textContent = String(allFiles.length);
+  } else {
+    menuEl.jsonBadge.textContent = '';
   }
-
-  jsonFilesList.innerHTML = files.map((f) => {
-    return `
-      <div class="json-file-item" data-filename="${escapeHtml(f.name)}">
-        <span class="json-file-icon">📄</span>
-        <div class="json-file-info">
-          <span class="json-file-name">${escapeHtml(f.name)}</span>
-        </div>
-        <span class="json-file-open">Open →</span>
-      </div>
-    `;
-  }).join('');
-
-  jsonFilesCount.textContent = `${files.length} file${files.length !== 1 ? 's' : ''}`;
-
-  // Add click handlers
-  jsonFilesList.querySelectorAll('.json-file-item').forEach(el => {
-    el.addEventListener('click', async () => {
-      const filename = el.dataset.filename;
-      const file = files.find(f => f.name === filename);
-      if (!file) return;
-
-      try {
-        lastOpenedJsonHandle = file.handle;
-        const fileObj = await file.handle.getFile();
-        const text = await fileObj.text();
-        const data = JSON.parse(text);
-        loadFromJSON(data);
-        closeJsonFilesPopup();
-      } catch (err) {
-        alert('Error opening file: ' + err.message);
-      }
-    });
-  });
 }
 
 function closeJsonFilesPopup() {
@@ -2262,7 +2650,6 @@ menuEl.btnJsonFiles.addEventListener('click', (e) => {
 
 btnCloseJsonPopup.addEventListener('click', closeJsonFilesPopup);
 btnRefreshJsonFiles.addEventListener('click', () => {
-  texturesDirHandle = null; // Invalidate cache to re-scan
   openJsonFilesPopup();
 });
 
