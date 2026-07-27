@@ -39,7 +39,6 @@ def main():
     host = args.host
     port = args.port
     use_https = args.https
-    debug = args.debug
 
     protocol = "https" if use_https else "http"
     display_host = host if host != "0.0.0.0" else "127.0.0.1"
@@ -80,7 +79,7 @@ def main():
     webview.start(
         gui=None,                 # Auto-detect (WebView2 on Windows)
         private_mode=False,
-        debug=debug,
+        debug=False,              # Never open DevTools in a separate window
     )
 
     # ── Cleanup when window is closed ──────────────────────────────
